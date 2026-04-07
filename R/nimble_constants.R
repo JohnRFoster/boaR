@@ -1,5 +1,5 @@
-#` Create A List For Nimble
-#`
+#' Create A List For Nimble
+#'
 #' @param df A data frame containing the survey data.
 #' @param interval The length of the primary period in days.
 #' @param data_repo The path to the data repository.

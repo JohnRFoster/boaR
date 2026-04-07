@@ -1,9 +1,12 @@
-#` nimble_constants` creates a list of constants for the nimble model.
+#` Create A List For Nimble
+#`
 #' @param df A data frame containing the survey data.
 #' @param interval The length of the primary period in days.
 #' @param data_repo The path to the data repository.
 #' @param post_round "first" or "last"; determines which set of prior hyperparameters to use.
+#'
 #' @return A list of constants for the nimble model.
+#' @export
 
 nimble_constants <- function(
   df,

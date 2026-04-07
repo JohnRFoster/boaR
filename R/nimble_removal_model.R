@@ -2,7 +2,6 @@
 # TODO update this when published
 #' @description This model is based on the removal model described in Foster et al. 2025 (doi.org/10.1101/2025.10.16.680799)
 #' @return model code
-#' @import nimble
 #' @export
 
 nimble_removal_model <- function() {
@@ -115,10 +114,9 @@ nimble_removal_model <- function() {
 #' @param n_trap_m1 scalar of number of traps minus 1 for each survey
 #' @param log_pi log of pi
 #' @param method method index for each survey
-#' @import nimble
 #' @return log of the potential area surveyed
 #' @export
-calc_log_potential_area <- nimbleFunction(
+calc_log_potential_area <- nimble::nimbleFunction(
   run = function(
     log_rho = double(1),
     log_gamma = double(1),

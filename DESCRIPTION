@@ -1,11 +1,10 @@
 Package: boaR
-Title: What the Package Does (One Line, Title Case)
+Title: Predict Wild Pig Abundance Using A Removal Model
 Version: 0.0.0.9000
 Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"))
-Description: What the package does (one paragraph).
-License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
-    license
+    person("John", "Foster", , "john.foster@usda.gov", role = c("aut", "cre"))
+Description: Predicts wild pig abundance using a removal model.
+License: GPL (>= 3)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3

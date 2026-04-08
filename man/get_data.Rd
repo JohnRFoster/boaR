@@ -4,7 +4,7 @@
 \alias{get_data}
 \title{Read MIS data, filter, and create primary periods}
 \usage{
-get_data(file, interval, create_new, data_repo)
+get_data(file, interval, create_new)
 }
 \arguments{
 \item{file}{The file path to the raw data CSV.}
@@ -12,8 +12,6 @@ get_data(file, interval, create_new, data_repo)
 \item{interval}{The number of days in each primary period.}
 
 \item{create_new}{Whether to create new primary periods or use existing ones (from calibration).}
-
-\item{data_repo}{The repository path for observation covariates.}
 }
 \description{
 Read MIS data, filter, and create primary periods

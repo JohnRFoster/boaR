@@ -4,14 +4,12 @@
 \alias{nimble_constants}
 \title{Create A List For Nimble}
 \usage{
-nimble_constants(df, interval, data_repo, post_round)
+nimble_constants(df, interval, post_round)
 }
 \arguments{
 \item{df}{A data frame containing the survey data.}
 
 \item{interval}{The length of the primary period in days.}
-
-\item{data_repo}{The path to the data repository.}
 
 \item{post_round}{"first" or "last"; determines which set of prior hyperparameters to use.}
 }

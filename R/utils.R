@@ -468,10 +468,8 @@ create_primary_periods <- function(df, interval, create_new = FALSE) {
 	df_time <- left_join(tmp, primary_periods)
 	df_test <- df_time |> dplyr::filter(!is.na(timestep))
 
-	testthat::test_that("Start and end dates align with known primary periods", {
-		expect_true(all(df_test$start.date >= df_test$start_dates))
-		expect_true(all(df_test$end.date <= df_test$end_dates))
-	})
+	testthat::expect_all_true(df_test$start.date >= df_test$start_dates)
+	testthat::expect_all_true(df_test$end.date <= df_test$end_dates)
 
 	df_test |>
 		arrange(propertyID, timestep)

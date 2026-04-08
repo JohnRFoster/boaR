@@ -2,7 +2,6 @@
 #'
 #' @param df A data frame containing the survey data.
 #' @param interval The length of the primary period in days.
-#' @param data_repo The path to the data repository.
 #' @param post_round "first" or "last"; determines which set of prior hyperparameters to use.
 #'
 #' @return A list of constants for the nimble model.
@@ -11,7 +10,6 @@
 nimble_constants <- function(
   df,
   interval,
-  data_repo,
   post_round
 ) {
   all_primary_periods <- create_all_primary_periods(df)

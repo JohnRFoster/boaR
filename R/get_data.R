@@ -2,14 +2,13 @@
 #' @param file The file path to the raw data CSV.
 #' @param interval The number of days in each primary period.
 #' @param create_new Whether to create new primary periods or use existing ones (from calibration).
-#' @param data_repo The repository path for observation covariates.
 #'
 #' @import dplyr
 #' @import readr
 #'
 #' @export
 
-get_data <- function(file, interval, create_new, data_repo) {
+get_data <- function(file, interval, create_new) {
 	all_take <- read_csv(file, show_col_types = FALSE) |>
 		dplyr::filter(start.date >= lubridate::ymd("2014-01-01")) |>
 		mutate(
@@ -66,9 +65,7 @@ get_data <- function(file, interval, create_new, data_repo) {
 
 	## observation covariates ----
 	# TODO get more (and updated) observation covariates
-	file_land <- "covariates/FINAL.Process.Model.Observation.Covariates.12Jan2018.csv"
-	fname <- file.path(data_repo, file_land)
-	data_obs <- get_obs_covars(fname)
+	data_obs <- get_obs_covars(land_csv)
 
 	## join MIS with observation covariates ----
 	data_join <- left_join(data_mis, data_obs, by = join_by(county_code))
@@ -79,13 +76,10 @@ get_data <- function(file, interval, create_new, data_repo) {
 
 
 # Deal with observation covariates, a small percentage of which are missing
-get_obs_covars <- function(file) {
-	obs_covs <- file |>
-		read_csv(show_col_types = FALSE) |>
+get_obs_covars <- function(df) {
+	df |>
 		mutate(county_code = sprintf("%05d", FIPS)) |>
-		dplyr::select(-starts_with('sd'), -NAME, -FIPS)
-
-	obs_covs |>
+		dplyr::select(-starts_with('sd'), -NAME, -FIPS) |>
 		group_by(STATE_NAME) |>
 		mutate(
 			rural.road.density = mean_impute(rural.road.density),

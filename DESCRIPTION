@@ -23,3 +23,5 @@ Imports:
     tidyr,
     utils,
     withr
+Depends: 
+    R (>= 3.5)

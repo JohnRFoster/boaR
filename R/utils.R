@@ -81,13 +81,13 @@ create_all_primary_periods <- function(df) {
 		pp <- tibble(
 			property = properties[i],
 			primary_period = p_min:p_max,
-			timestep = 1:length(p_min:p_max)
+			timestep = seq_along(p_min:p_max)
 		)
 		all_pp <- bind_rows(all_pp, pp)
 		setTxtProgressBar(pb, i)
 	}
 	close(pb)
-	all_pp |> mutate(n_id = 1:n())
+	all_pp |> mutate(n_id = seq_len(n()))
 }
 
 # need to know the total number of timesteps in each property (sampled or not) for indexing
@@ -102,7 +102,7 @@ n_timesteps <- function(df) {
 # used in the process model
 N_lookup_table <- function(df) {
 	df |>
-		mutate(n_id = 1:n()) |>
+		mutate(n_id = seq_len(n())) |>
 		select(-primary_period) |>
 		pivot_wider(names_from = timestep, values_from = n_id) |>
 		select(-property) |>
@@ -430,7 +430,7 @@ create_primary_periods <- function(df, interval, create_new = FALSE) {
 	}
 
 	message("Creating primary periods from start and end dates...")
-	if (interval == 28 & !create_new) {
+	if (interval == 28 && !create_new) {
 		primary_periods <- read_rds("data/primaryPeriods28Days.rds")
 
 		timesteps <- map(
@@ -449,7 +449,7 @@ create_primary_periods <- function(df, interval, create_new = FALSE) {
 		end_dates <- c(start_dates[-1] - 1, max_date)
 
 		primary_periods <- tibble(start_dates, end_dates) |>
-			mutate(timestep = 1:n())
+			mutate(timestep = seq_len(n()))
 		primary_periods$month <- month(timestep_df$end_dates)
 		primary_periods$year <- year(timestep_df$end_dates)
 	} else {
@@ -697,7 +697,7 @@ create_timestep_df <- function(df) {
 		unique() |>
 		arrange(propertyID, primary_period) |>
 		group_by(propertyID) |>
-		mutate(observed_timestep = 1:n()) |> # timestep is the sequence of primary periods within a property
+		mutate(observed_timestep = seq_len(n())) |> # timestep is the sequence of primary periods within a property
 		ungroup() |>
 		mutate(primary_period = primary_period - min(primary_period) + 1)
 }

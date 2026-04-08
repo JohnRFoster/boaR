@@ -3,6 +3,7 @@
 #' @param data_nimble A list of data for the nimble model.
 #' @param buffer A numeric value to add to the initial values of N and lambda_1 to ensure they comply with take values.
 #' @return A list of initial values for the nimble model. Works for one chain.
+#' @import stats
 #' @export
 
 nimble_inits <- function(constants_nimble, data_nimble, buffer = 1000) {

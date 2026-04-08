@@ -14,8 +14,6 @@ nimble_constants <- function(
   data_repo,
   post_round
 ) {
-  source("R/func_misc.R")
-
   all_primary_periods <- create_all_primary_periods(df)
   n_time_prop <- n_timesteps(all_primary_periods)
   n_method <- length(unique(df$method))

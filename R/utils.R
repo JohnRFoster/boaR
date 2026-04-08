@@ -4,24 +4,21 @@
 # sample for the specified duration 'n_iters'
 # drop previous samples (we save them after each time this function is called, so we don't need them)
 continue_sampling <- function() {
-	require(nimble)
-	require(coda)
 	Cmcmc$run(niter = n_iters, reset = FALSE, resetMV = TRUE, thin = 10)
 	samples <<- as.matrix(Cmcmc$mvSamples) # need to define this in the global environment to use in subset_mcmc
-	return(samples)
+	samples
 }
 
 # for taking nodes and splitting them from an mcmc list
 # as is, does one node at a time but can be passed to lapply to use on a vector of nodes
 subset_mcmc <- function(node) {
-	require(dplyr)
 	s <- samples[, grep(node, colnames(samples), value = TRUE, fixed = TRUE)] |>
 		as.matrix() |>
 		as_tibble()
 	if (ncol(s) == 1) {
 		colnames(s) <- node
 	}
-	return(s)
+	s
 }
 
 # get parameter nodes using subset_mcmc
@@ -50,7 +47,7 @@ write_out_p <- function(p, d, dest) {
 	write_rds(list(params = p, diagnostic = d), file.path(dest, f))
 }
 
-write_abundnace <- function(no, nu, dest) {
+write_abundance <- function(no, nu, dest) {
 	f <- "observedAbundanceSamples.rds"
 	write_rds(no, file.path(dest, f))
 
@@ -66,7 +63,7 @@ create_all_primary_periods <- function(df) {
 		select(property, primary_period) |>
 		distinct() |>
 		group_by(property) |>
-		filter(
+		dplyr::filter(
 			primary_period == min(primary_period) |
 				primary_period == max(primary_period)
 		) |>
@@ -78,7 +75,7 @@ create_all_primary_periods <- function(df) {
 	message("\nInclude all primary periods")
 	pb <- txtProgressBar(max = length(properties), style = 1)
 	for (i in seq_along(properties)) {
-		pid <- pp_min_max |> filter(property == properties[i])
+		pid <- pp_min_max |> dplyr::filter(property == properties[i])
 		p_min <- min(pid$primary_period)
 		p_max <- max(pid$primary_period)
 		pp <- tibble(
@@ -97,7 +94,7 @@ create_all_primary_periods <- function(df) {
 n_timesteps <- function(df) {
 	df |>
 		group_by(property) |>
-		filter(timestep == max(timestep)) |>
+		dplyr::filter(timestep == max(timestep)) |>
 		pull(timestep)
 }
 
@@ -179,18 +176,13 @@ create_start_end <- function(df_take, df_pp) {
 
 # informed hyper parameters for beta distribution on global pig survival
 create_surv_prior <- function(interval, data_repo) {
-	require(lubridate)
-	require(readr)
-	require(dplyr)
-	require(tidyr)
-
 	data <- read_csv(
 		file.path(data_repo, "insitu/Vital_Rate_Data.csv"),
 		show_col_types = FALSE
 	)
 
 	data_usa <- data |>
-		filter(
+		dplyr::filter(
 			country == "USA",
 			time.period.end != "null",
 			time.period.start != "null",
@@ -202,7 +194,7 @@ create_surv_prior <- function(interval, data_repo) {
 		)
 
 	surv_data <- data_usa |>
-		filter(!is.na(survival.prop)) |>
+		dplyr::filter(!is.na(survival.prop)) |>
 		select(
 			unique.ID,
 			paper.ID,
@@ -221,24 +213,24 @@ create_surv_prior <- function(interval, data_repo) {
 			survival.per.4week = survival.prop^(1 / weeks4),
 			logit.survival.per.4week = boot::logit(survival.per.4week)
 		) |>
-		filter(survival.per.4week > 0) |>
+		dplyr::filter(survival.per.4week > 0) |>
 		mutate(scale_factor = survival.per.4week / survival.prop)
 
 	surv_mu_summary <- surv_mu |>
-		summarise(
+		dplyr::summarise(
 			mu = mean(survival.per.4week),
 			mu.logit = mean(logit.survival.per.4week)
 		)
 
 	surv_var <- surv_data |>
-		filter(survival.var.type %in% c("SD", "95% CI"))
+		dplyr::filter(survival.var.type %in% c("SD", "95% CI"))
 
 	surv_sd <- surv_var |>
-		filter(survival.var.type == "SD") |>
+		dplyr::filter(survival.var.type == "SD") |>
 		mutate(sd = as.numeric(survival.var))
 
 	surv_sd_calc <- surv_var |>
-		filter(survival.var.type == "95% CI") |>
+		dplyr::filter(survival.var.type == "95% CI") |>
 		mutate(
 			low.CI = as.numeric(stringr::str_extract(
 				survival.var,
@@ -255,7 +247,7 @@ create_surv_prior <- function(interval, data_repo) {
 		summarise(sd = max(sd_high, sd_low))
 
 	surv_var_join <- left_join(surv_var, surv_sd_calc, by = join_by(unique.ID)) |>
-		filter(survival.var.type != "SD")
+		dplyr::filter(survival.var.type != "SD")
 
 	scale_ids <- surv_mu |>
 		select(unique.ID, scale_factor)
@@ -277,10 +269,10 @@ create_surv_prior <- function(interval, data_repo) {
 	alpha <- mu * psi
 	beta <- (1 - mu) * psi
 
-	return(list(
+	list(
 		alpha = alpha,
 		beta = beta
-	))
+	)
 }
 
 # matrix of landscape covariates for data model
@@ -356,7 +348,7 @@ get_prior_hyperparams <- function(post_round, posterior_path = NULL) {
 # prior is on the log scale
 get_n1_prior <- function(df) {
 	df |>
-		filter(observed_timestep == 1) |>
+		dplyr::filter(observed_timestep == 1) |>
 		group_by(property, property_area_km2) |>
 		reframe(total_take = sum(take)) |>
 		mutate(
@@ -380,9 +372,6 @@ create_ids <- function(df) {
 
 # figure out if we need to keep sampling
 continue_mcmc <- function(mcmc, effective_size, max_psrf, verbose) {
-	require(coda)
-	require(purrr)
-
 	message("Checking convergence and sample size")
 	psrf <- gelman.diag(mcmc, multivariate = FALSE)$psrf
 	effective_samples <- effectiveSize(mcmc)
@@ -429,10 +418,6 @@ center_scale <- function(x) {
 }
 
 create_primary_periods <- function(df, interval, create_new = FALSE) {
-	require(lubridate)
-	require(purrr)
-	require(testthat)
-
 	find_timestep <- function(dfpp, start, end) {
 		after_start <- which(dfpp$start_dates <= start) |> max()
 		before_end <- which(dfpp$end_dates >= end) |> min()
@@ -483,9 +468,9 @@ create_primary_periods <- function(df, interval, create_new = FALSE) {
 		mutate(timestep = timesteps)
 
 	df_time <- left_join(tmp, primary_periods)
-	df_test <- df_time |> filter(!is.na(timestep))
+	df_test <- df_time |> dplyr::filter(!is.na(timestep))
 
-	test_that("Start and end dates align with known primary periods", {
+	testthat::test_that("Start and end dates align with known primary periods", {
 		expect_true(all(df_test$start.date >= df_test$start_dates))
 		expect_true(all(df_test$end.date <= df_test$end_dates))
 	})
@@ -514,7 +499,11 @@ resolve_duplicate <- function(insitu_data) {
 
 	insitu_data |>
 		left_join(property_areas, by = join_by(propertyID, property_area_km2)) |>
-		filter(!is.na(property_area_km2), property_area_km2 >= 1.8, effort > 0)
+		dplyr::filter(
+			!is.na(property_area_km2),
+			property_area_km2 >= 1.8,
+			effort > 0
+		)
 }
 
 # need to filter events so that there are at least two events in a timestep
@@ -524,19 +513,19 @@ dynamic_filter <- function(df) {
 		select(propertyID, timestep) |>
 		group_by(propertyID, timestep) |>
 		mutate(two_plus_takes = n() >= 2) |>
-		filter(two_plus_takes) |>
+		dplyr::filter(two_plus_takes) |>
 		group_by(propertyID) |>
 		arrange(propertyID, timestep) |>
 		distinct() |>
 		mutate(n_timesteps = length(unique(timestep))) |>
-		filter(n_timesteps >= 2) |>
+		dplyr::filter(n_timesteps >= 2) |>
 		ungroup() |>
 		mutate(event_id = paste0(propertyID, "-", timestep)) |>
 		pull(event_id)
 
 	df |>
 		mutate(event_id = paste0(propertyID, "-", timestep)) |>
-		filter(event_id %in% good_events) |>
+		dplyr::filter(event_id %in% good_events) |>
 		arrange(propertyID, timestep)
 }
 
@@ -545,10 +534,10 @@ take_filter <- function(df) {
 		group_by(propertyID) |>
 		summarise(sum_take = sum(take)) |>
 		ungroup() |>
-		filter(sum_take == 0) |>
+		dplyr::filter(sum_take == 0) |>
 		pull(propertyID)
 
-	df |> filter(!propertyID %in% zero_take_prp)
+	df |> dplyr::filter(!propertyID %in% zero_take_prp)
 }
 
 # compute ordering based on time interval midpoints
@@ -578,7 +567,7 @@ order_stochastic <- function(order.df) {
 	order_df$jittered_midpoint <- NA
 	message("Stochastic ordering...")
 	pb <- txtProgressBar(max = nrow(order_df), style = 1)
-	for (i in 1:nrow(order_df)) {
+	for (i in seq_len(nrow(order_df))) {
 		if (order_df$method[i] %in% c('Trap', 'Snare')) {
 			order_df$jittered_midpoint[i] <- order_df$midpoint[i] +
 				runif(1, min = 0, max = .01)
@@ -591,7 +580,7 @@ order_stochastic <- function(order.df) {
 		}
 		setTxtProgressBar(pb, i)
 	}
-	return(order_df)
+	order_df
 }
 
 # now compute orders of events based on jittered midpoints
@@ -607,13 +596,13 @@ order_of_events <- function(order_df) {
 		) |>
 		ungroup() |>
 		arrange(propertyID, timestep, order) |>
-		mutate(p = 1:n())
+		mutate(p = seq_len(n()))
 
-	targets::tar_assert_true(all(df$has_multi))
-	targets::tar_assert_true(!all(df$any_ties))
-	targets::tar_assert_true(all(df$n_survey > 1))
+	testthat::expect_all_true(df$has_multi)
+	testthat::expect_all_true(!df$any_ties)
+	testthat::expect_all_true(df$n_survey > 1)
 
-	return(df)
+	df
 }
 
 county_codes <- function(df) {
@@ -659,26 +648,27 @@ get_fips <- function(file = "data/fips/national_county.txt") {
 
 get_ts_length <- function(df) {
 	df |>
-		filter(!st_name %in% c("CALIFORNIA", "ALABAMA", "ARIZONA", "ARKANSAS")) |>
+		dplyr::filter(
+			!st_name %in% c("CALIFORNIA", "ALABAMA", "ARIZONA", "ARKANSAS")
+		) |>
 		select(propertyID, primary_period) |>
 		distinct() |>
 		group_by(propertyID) |>
-		filter(
+		dplyr::filter(
 			primary_period == min(primary_period) |
 				primary_period == max(primary_period)
 		) |>
 		mutate(delta = c(0, diff(primary_period) + 1)) |>
 		ungroup() |>
-		filter(delta != 0)
+		dplyr::filter(delta != 0)
 }
 
 get_n_observations <- function(df, good_props) {
 	df |>
-		filter(propertyID %in% good_props) |>
+		dplyr::filter(propertyID %in% good_props) |>
 		group_by(propertyID, primary_period) |>
 		summarise(take = sum(take)) |>
 		ungroup() |>
-		# filter(take > 0) |>
 		group_by(propertyID) |>
 		count()
 }
@@ -691,13 +681,13 @@ condition_first_capture <- function(df) {
 		group_by(propertyID) |>
 		mutate(cumulative_take = cumsum(take)) |>
 		ungroup() |>
-		filter(cumulative_take > 0) |>
+		dplyr::filter(cumulative_take > 0) |>
 		mutate(event_id = paste0(propertyID, "-", timestep)) |>
 		pull(event_id)
 
 	df |>
 		mutate(event_id = paste0(propertyID, "-", timestep)) |>
-		filter(event_id %in% good_events) |>
+		dplyr::filter(event_id %in% good_events) |>
 		arrange(propertyID, timestep)
 }
 

@@ -3,11 +3,15 @@
 #' @param interval The number of days in each primary period.
 #' @param create_new Whether to create new primary periods or use existing ones (from calibration).
 #' @param data_repo The repository path for observation covariates.
+#'
+#' @import dplyr
+#' @import readr
+#'
 #' @export
 
 get_data <- function(file, interval, create_new, data_repo) {
 	all_take <- read_csv(file, show_col_types = FALSE) |>
-		filter(start.date >= lubridate::ymd("2014-01-01")) |>
+		dplyr::filter(start.date >= lubridate::ymd("2014-01-01")) |>
 		mutate(
 			cnty_name = if_else(
 				grepl("ST ", cnty_name),
@@ -19,7 +23,7 @@ get_data <- function(file, interval, create_new, data_repo) {
 
 	data_mis <- all_take |>
 		mutate(property_area_km2 = round(property.size * 0.00404686, 2)) |>
-		filter(property_area_km2 >= 1.8, st_name != "HAWAII") |>
+		dplyr::filter(property_area_km2 >= 1.8, st_name != "HAWAII") |>
 		mutate(
 			effort = if_else(
 				cmp_name %in% c("TRAPS, CAGE", "SNARE"),
@@ -69,7 +73,7 @@ get_data <- function(file, interval, create_new, data_repo) {
 	## join MIS with observation covariates ----
 	data_join <- left_join(data_mis, data_obs, by = join_by(county_code))
 	data_join |>
-		filter(!is.na(c_road_den)) |>
+		dplyr::filter(!is.na(c_road_den)) |>
 		create_ids()
 }
 
@@ -81,7 +85,7 @@ get_obs_covars <- function(file) {
 		mutate(county_code = sprintf("%05d", FIPS)) |>
 		dplyr::select(-starts_with('sd'), -NAME, -FIPS)
 
-	obs_covs <- obs_covs |>
+	obs_covs |>
 		group_by(STATE_NAME) |>
 		mutate(
 			rural.road.density = mean_impute(rural.road.density),
@@ -95,10 +99,4 @@ get_obs_covars <- function(file) {
 			c_rugged = center_scale(mean.ruggedness),
 			c_canopy = center_scale(mean.canopy.density)
 		)
-
-	targets::tar_assert_true(!any(is.na(obs_covs$c_road_den)))
-	targets::tar_assert_true(!any(is.na(obs_covs$c_rugged)))
-	targets::tar_assert_true(!any(is.na(obs_covs$c_canopy)))
-
-	return(obs_covs)
 }

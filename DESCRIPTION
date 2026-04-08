@@ -17,6 +17,9 @@ Imports:
     lubridate,
     nimble,
     purrr,
+    readr,
     rlang,
+    stats,
     tidyr,
+    utils,
     withr

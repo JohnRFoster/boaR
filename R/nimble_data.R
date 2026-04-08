@@ -5,7 +5,7 @@
 
 nimble_data <- function(df) {
 	# mean litter size year from VerCauteren et al. 2019 pg 63
-	data_ls <- read_rds("data/litterSizeVerCauterenEtAl2019.rds")
+	data_ls <- readr::read_rds("data/litterSizeVerCauterenEtAl2019.rds")
 
 	X <- create_X(df)
 	y_sum <- removed_in_pp_cumsum(df)

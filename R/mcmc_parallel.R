@@ -11,6 +11,9 @@
 #'@param dest output filepath. within this directory each 'chunk' will be saved into it's own directory
 #'@param monitors_add vector of nodes to monitor in addition to default nodes
 #'@param custom_samplers data frame of mcmc config. Nodes in one column, sampler types in another
+#'
+#'@import parallel
+#'
 #'@export
 
 mcmc_parallel <- function(
@@ -25,16 +28,8 @@ mcmc_parallel <- function(
 	monitors_add = NULL,
 	custom_samplers = NULL
 ) {
-	require(foreach)
-	require(coda)
-	require(doParallel)
-
 	# add function arguments to the local environment, needed for exporting to 'cl'
 	as.list(environment(), all = TRUE)
-
-	source("R/func_mcmc_helpers.R")
-	source("R/func_mcmc_single.R")
-	source("R/func_continue_mcmc.R")
 
 	export <- c(
 		"single_mcmc_chain",
@@ -102,7 +97,7 @@ mcmc_parallel <- function(
 
 	converged <- all(diagnostic$psrf[, 2] < 1.1)
 	if (converged) {
-		write_abundnace(N_observed, N_unobserved, path)
+		write_abundance(N_observed, N_unobserved, path)
 	}
 
 	continue <- !diagnostic$done
@@ -149,7 +144,7 @@ mcmc_parallel <- function(
 		write_N <- if_else(converged, TRUE, FALSE)
 
 		if (converged || write_N) {
-			write_abundnace(N_observed, N_unobserved, path)
+			write_abundance(N_observed, N_unobserved, path)
 		}
 
 		continue <- !diagnostic$done

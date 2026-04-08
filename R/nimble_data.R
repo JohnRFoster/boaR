@@ -4,16 +4,13 @@
 #' @export
 
 nimble_data <- function(df) {
-	# mean litter size year from VerCauteren et al. 2019 pg 63
-	data_ls <- readr::read_rds("data/litterSizeVerCauterenEtAl2019.rds")
-
 	X <- create_X(df)
 	y_sum <- removed_in_pp_cumsum(df)
 
 	list(
 		y = df$take,
 		y_sum = y_sum,
-		J = data_ls,
+		J = data_ls, # mean litter size year from VerCauteren et al. 2019 pg 63
 		X_p = X,
 		effort_per = df$effort_per,
 		log_effort_per = log(df$effort_per),

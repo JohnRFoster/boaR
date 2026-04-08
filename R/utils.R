@@ -284,9 +284,9 @@ create_X <- function(df, cols = c("c_road_den", "c_rugged", "c_canopy")) {
 
 get_prior_hyperparams <- function(post_round, posterior_path = NULL) {
 	if (post_round == "first") {
-		read_rds("data/originalFirstRoundHyperparameters.rds")
+		post <- post_first
 	} else if (post_round == "last") {
-		read_rds("data/originalLastRoundHyperparameters.rds")
+		post <- post_last
 	} else if (post_round == "create_new") {
 		post <- read_rds(posterior_path)
 
@@ -431,8 +431,6 @@ create_primary_periods <- function(df, interval, create_new = FALSE) {
 
 	message("Creating primary periods from start and end dates...")
 	if (interval == 28 && !create_new) {
-		primary_periods <- read_rds("data/primaryPeriods28Days.rds")
-
 		timesteps <- map(
 			seq_len(nrow(df)),
 			~ find_timestep(primary_periods, df$start.date[.x], df$end.date[.x]),

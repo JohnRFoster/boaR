@@ -27,12 +27,9 @@ nimble_constants <- function(
   start_end <- create_start_end(df, all_primary_periods)
   n1_priors <- get_n1_prior(df)
 
-  # mean litter size year from VerCauteren et al. 2019 pg 63
-  data_ls <- read_rds("data/litterSizeVerCauterenEtAl2019.rds")
-
   constants <- list(
     n_survey = nrow(df),
-    n_ls = length(data_ls),
+    n_ls = length(data_ls), # mean litter size year from VerCauteren et al. 2019 pg 63
     n_property = length(unique(df$property)),
     n_first_survey = length(which(df$order == 1)),
     n_not_first_survey = length(which(df$order != 1)),

@@ -48,6 +48,7 @@ mcmc_parallel <- function(
 	)
 
 	clusterExport(cl, export, envir = environment())
+	clusterExport(cl, source("R/utils.R"), envir = environment())
 
 	for (i in seq_along(cl)) {
 		init <- model_inits[[i]]

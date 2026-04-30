@@ -29,7 +29,7 @@ mcmc_parallel <- function(
 	custom_samplers = NULL
 ) {
 	# add function arguments to the local environment, needed for exporting to 'cl'
-	as.list(environment(), all = TRUE)
+	# as.list(environment(), all = TRUE)
 
 	export <- c(
 		"single_mcmc_chain",
@@ -48,7 +48,6 @@ mcmc_parallel <- function(
 	)
 
 	clusterExport(cl, export, envir = environment())
-	clusterExport(cl, source("R/utils.R"), envir = environment())
 
 	for (i in seq_along(cl)) {
 		init <- model_inits[[i]]

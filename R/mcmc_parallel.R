@@ -56,7 +56,7 @@ mcmc_parallel <- function(
 	# initialize model and first samples
 	c <- 1
 	start <- Sys.time()
-	out <- clusterEvalQ(
+	out <- parallel::clusterEvalQ(
 		cl,
 		single_mcmc_chain(
 			model_constants = model_constants,
@@ -72,7 +72,7 @@ mcmc_parallel <- function(
 	print(round(Sys.time() - start, 2))
 
 	start2 <- Sys.time()
-	out2 <- clusterEvalQ(cl, continue_sampling())
+	out2 <- parallel::clusterEvalQ(cl, continue_sampling())
 	message("Additional ", n_iters, " iterations completed in:")
 	print(round(Sys.time() - start2, 2))
 
@@ -80,18 +80,19 @@ mcmc_parallel <- function(
 	print(round(Sys.time() - start, 2))
 
 	# use mcmc on clusters to subset parameters, observed states, and unobserved states
-	params <- clusterEvalQ(cl, subset_params())
-	params <- as.mcmc.list(lapply(params, as.mcmc))
+	params <- parallel::clusterEvalQ(cl, subset_params())
+	params <- coda::as.mcmc.list(lapply(params, as.mcmc))
 
-	N_observed <- clusterEvalQ(cl, subset_N_observed())
-	N_observed <- as.mcmc.list(lapply(N_observed, as.mcmc))
+	N_observed <- parallel::clusterEvalQ(cl, subset_N_observed())
+	N_observed <- coda::as.mcmc.list(lapply(N_observed, as.mcmc))
 
-	N_unobserved <- clusterEvalQ(cl, subset_N_unobserved()) |> as.matrix()
+	N_unobserved <- parallel::clusterEvalQ(cl, subset_N_unobserved()) |>
+		as.matrix()
 
-	params_mcmc_list <- as.mcmc.list(lapply(params, as.mcmc))
+	params_mcmc_list <- coda::as.mcmc.list(lapply(params, as.mcmc))
 	efsize <- 1000
 	diagnostic <- continue_mcmc(
-		params_mcmc_list,
+		mcmc = params_mcmc_list,
 		effective_size = efsize,
 		max_psrf = 15,
 		verbose = TRUE
@@ -115,10 +116,10 @@ mcmc_parallel <- function(
 	while (continue) {
 		c <- c + 1
 		resetMV <- TRUE
-		clusterExport(cl, "resetMV", envir = environment())
+		parallel::clusterExport(cl, "resetMV", envir = environment())
 
 		start2 <- Sys.time()
-		out2 <- clusterEvalQ(cl, continue_sampling())
+		out2 <- parallel::clusterEvalQ(cl, continue_sampling())
 		message("Additional ", n_iters, " iterations completed in:")
 		print(round(Sys.time() - start2, 2))
 
@@ -127,8 +128,8 @@ mcmc_parallel <- function(
 		print(round(Sys.time() - start, 2))
 
 		# use mcmc on clusters to subset parameters, observed states, and unobserved states
-		params <- clusterEvalQ(cl, subset_params())
-		params <- as.mcmc.list(lapply(params, as.mcmc))
+		params <- parallel::clusterEvalQ(cl, subset_params())
+		params <- coda::as.mcmc.list(lapply(params, as.mcmc))
 
 		c_dir <- sprintf("%04d", c)
 		path <- file.path(dest, c_dir)
@@ -139,19 +140,20 @@ mcmc_parallel <- function(
 		diagnostic <- NULL
 		write_out_p(params, diagnostic, path)
 
-		N_observed <- clusterEvalQ(cl, subset_N_observed())
-		N_observed <- as.mcmc.list(lapply(N_observed, as.mcmc))
-		N_unobserved <- clusterEvalQ(cl, subset_N_unobserved()) |> as.matrix()
+		N_observed <- parallel::clusterEvalQ(cl, subset_N_observed())
+		N_observed <- coda::as.mcmc.list(lapply(N_observed, as.mcmc))
+		N_unobserved <- parallel::clusterEvalQ(cl, subset_N_unobserved()) |>
+			as.matrix()
 
 		params_mcmc_list <- collate_mcmc_chunks(dest)$params
 		diagnostic <- continue_mcmc(
-			params_mcmc_list,
+			mcmc = params_mcmc_list,
 			effective_size = efsize,
 			max_psrf = 15,
 			verbose = TRUE
 		)
 		converged <- all(diagnostic$psrf[, 2] < 1.1)
-		write_N <- if_else(converged, TRUE, FALSE)
+		write_N <- dplyr::if_else(converged, TRUE, FALSE)
 
 		if (converged || write_N) {
 			write_abundance(N_observed, N_unobserved, path)

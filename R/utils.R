@@ -5,7 +5,7 @@
 # drop previous samples (we save them after each time this function is called, so we don't need them)
 continue_sampling <- function() {
 	Cmcmc$run(niter = n_iters, reset = FALSE, resetMV = TRUE, thin = 10)
-	samples <<- as.matrix(Cmcmc$mvSamples) # need to define this in the global environment to use in subset_mcmc
+	samples <<- coda::as.matrix(Cmcmc$mvSamples) # need to define this in the global environment to use in subset_mcmc
 	samples
 }
 
@@ -14,7 +14,7 @@ continue_sampling <- function() {
 subset_mcmc <- function(node) {
 	s <- samples[, grep(node, colnames(samples), value = TRUE, fixed = TRUE)] |>
 		as.matrix() |>
-		as_tibble()
+		tibble::as_tibble()
 	if (ncol(s) == 1) {
 		colnames(s) <- node
 	}
@@ -23,34 +23,45 @@ subset_mcmc <- function(node) {
 
 # get parameter nodes using subset_mcmc
 subset_params <- function() {
-	map_dfc(lapply(params_check, subset_mcmc), as_tibble) |> as.matrix()
+	purrr::map_dfc(
+		lapply(params_check, subset_mcmc),
+		tibble::as_tibble
+	) |>
+		as.matrix()
 }
 
 # get observed abundance nodes using subset_mcmc
 subset_N_observed <- function() {
 	nodes <- paste0("N[", model_constants$N_full_unique, "]")
-	map_dfc(lapply(nodes, subset_mcmc), as_tibble) |> as.matrix()
+	purrr::map_dfc(
+		lapply(nodes, subset_mcmc),
+		tibble::as_tibble
+	) |>
+		as.matrix()
 }
 
 # get unobserved abundance nodes using subset_mcmc
 subset_N_unobserved <- function() {
 	nodes <- paste0("N[", model_constants$N_quant_unique, "]")
-	N_unobserved <- map_dfc(lapply(nodes, subset_mcmc), as_tibble) |>
+	N_unobserved <- purrr::map_dfc(
+		lapply(nodes, subset_mcmc),
+		tibble::as_tibble
+	) |>
 		as.matrix()
 	t(apply(N_unobserved, 2, quantile, c(0.025, 0.5, 0.975)))
 }
 
 write_out_p <- function(p, d, dest) {
 	f <- "paramSamples.rds"
-	write_rds(list(params = p, diagnostic = d), file.path(dest, f))
+	readr::write_rds(list(params = p, diagnostic = d), file.path(dest, f))
 }
 
 write_abundance <- function(no, nu, dest) {
 	f <- "observedAbundanceSamples.rds"
-	write_rds(no, file.path(dest, f))
+	readr::write_rds(no, file.path(dest, f))
 
 	f <- "unobservedAbundanceQuantiles.rds"
-	write_rds(nu, file.path(dest, f))
+	readr::write_rds(nu, file.path(dest, f))
 }
 
 # miscellaneous helper functions
@@ -58,62 +69,62 @@ write_abundance <- function(no, nu, dest) {
 # need all timesteps whether there are observations or not
 create_all_primary_periods <- function(df) {
 	pp_min_max <- df |>
-		select(property, primary_period) |>
-		distinct() |>
-		group_by(property) |>
+		dplyr::select(property, primary_period) |>
+		dplyr::distinct() |>
+		dplyr::group_by(property) |>
 		dplyr::filter(
 			primary_period == min(primary_period) |
 				primary_period == max(primary_period)
 		) |>
-		ungroup()
+		dplyr::ungroup()
 
 	properties <- unique(pp_min_max$property)
 
-	all_pp <- tibble()
+	all_pp <- tibble::tibble()
 	message("\nInclude all primary periods")
 	pb <- txtProgressBar(max = length(properties), style = 1)
 	for (i in seq_along(properties)) {
 		pid <- pp_min_max |> dplyr::filter(property == properties[i])
 		p_min <- min(pid$primary_period)
 		p_max <- max(pid$primary_period)
-		pp <- tibble(
+		pp <- tibble::tibble(
 			property = properties[i],
 			primary_period = p_min:p_max,
 			timestep = seq_along(p_min:p_max)
 		)
-		all_pp <- bind_rows(all_pp, pp)
+		all_pp <- dplyr::bind_rows(all_pp, pp)
 		setTxtProgressBar(pb, i)
 	}
 	close(pb)
-	all_pp |> mutate(n_id = seq_len(n()))
+	all_pp |> dplyr::mutate(n_id = seq_len(n()))
 }
 
 # need to know the total number of timesteps in each property (sampled or not) for indexing
 n_timesteps <- function(df) {
 	df |>
-		group_by(property) |>
+		dplyr::group_by(property) |>
 		dplyr::filter(timestep == max(timestep)) |>
-		pull(timestep)
+		dplyr::pull(timestep)
 }
 
 # index (as a matrix) for tracking abundance in long format (converting wide to long)
 # used in the process model
 N_lookup_table <- function(df) {
 	df |>
-		mutate(n_id = seq_len(n())) |>
-		select(-primary_period) |>
-		pivot_wider(names_from = timestep, values_from = n_id) |>
-		select(-property) |>
+		dplyr::mutate(n_id = seq_len(n())) |>
+		dplyr::select(-primary_period) |>
+		tidyr::pivot_wider(names_from = timestep, values_from = n_id) |>
+		dplyr::select(-property) |>
 		as.matrix()
 }
 
 # calculate the cumulative number of pigs taken as a primary period progresses
 removed_in_pp_cumsum <- function(df) {
 	df |>
-		group_by(property, primary_period) |>
-		mutate(ysum = cumsum(take) - take) |>
-		ungroup() |>
-		pull(ysum)
+		dplyr::group_by(property, primary_period) |>
+		dplyr::mutate(ysum = cumsum(take) - take) |>
+		dplyr::ungroup() |>
+		dplyr::pull(ysum)
 }
 
 # the total number of pigs taken in a primary period across all methods
@@ -121,15 +132,15 @@ removed_in_pp_cumsum <- function(df) {
 # wide format
 total_take <- function(df_take, df_pp) {
 	sum_take <- df_take |>
-		group_by(property, primary_period) |>
-		summarise(sum_take = sum(take)) |>
-		ungroup()
+		dplyr::group_by(property, primary_period) |>
+		dplyr::summarise(sum_take = sum(take)) |>
+		dplyr::ungroup()
 
-	left_join(df_pp, sum_take, by = join_by(property, primary_period)) |>
-		mutate(sum_take = if_else(is.na(sum_take), 0, sum_take)) |>
-		select(-primary_period, -n_id) |>
-		pivot_wider(names_from = timestep, values_from = sum_take) |>
-		select(-property) |>
+	dplyr::left_join(df_pp, sum_take, by = join_by(property, primary_period)) |>
+		dplyr::mutate(sum_take = if_else(is.na(sum_take), 0, sum_take)) |>
+		dplyr::select(-primary_period, -n_id) |>
+		tidyr::pivot_wider(names_from = timestep, values_from = sum_take) |>
+		dplyr::select(-property) |>
 		as.matrix()
 }
 
@@ -137,12 +148,12 @@ total_take <- function(df_take, df_pp) {
 # and therefore included in the data model
 N_lookup_data <- function(df_take, df_pp) {
 	tH <- df_take |>
-		select(property, primary_period)
+		dplyr::select(property, primary_period)
 
 	df_pp |>
-		select(property, primary_period, n_id) |>
-		right_join(tH, by = join_by(property, primary_period)) |>
-		pull(n_id)
+		dplyr::select(property, primary_period, n_id) |>
+		dplyr::right_join(tH, by = join_by(property, primary_period)) |>
+		dplyr::pull(n_id)
 }
 
 # need start and end indicies for data model
@@ -150,7 +161,7 @@ N_lookup_data <- function(df_take, df_pp) {
 create_start_end <- function(df_take, df_pp) {
 	start <- end <- numeric(nrow(df_take))
 
-	df <- left_join(df_take, df_pp, by = join_by(primary_period, property))
+	df <- dplyr::left_join(df_take, df_pp, by = join_by(primary_period, property))
 
 	message("Creating start/end indicies")
 	pb <- txtProgressBar(max = nrow(df), style = 1)
@@ -164,12 +175,12 @@ create_start_end <- function(df_take, df_pp) {
 			)
 			start[i] <- idx[1]
 			end[i] <- idx[length(idx)]
-			assertthat::are_equal(idx, start[i]:end[i])
+			testthat::expect_equal(idx, start[i]:end[i])
 		}
 		setTxtProgressBar(pb, i)
 	}
 	close(pb)
-	tibble(start = start, end = end)
+	tibble::tibble(start = start, end = end)
 }
 
 # informed hyper parameters for beta distribution on global pig survival
@@ -188,7 +199,7 @@ create_surv_prior <- function(interval) {
 
 	surv_data <- data_usa |>
 		dplyr::filter(!is.na(survival.prop)) |>
-		select(
+		dplyr::select(
 			unique.ID,
 			paper.ID,
 			N.hogs.in.study,
@@ -200,14 +211,14 @@ create_surv_prior <- function(interval) {
 		)
 
 	surv_mu <- surv_data |>
-		mutate(
+		dplyr::mutate(
 			weeks = as.numeric(time.period.end - time.period.start) / 7,
 			weeks4 = weeks / interval,
 			survival.per.4week = survival.prop^(1 / weeks4),
 			logit.survival.per.4week = boot::logit(survival.per.4week)
 		) |>
 		dplyr::filter(survival.per.4week > 0) |>
-		mutate(scale_factor = survival.per.4week / survival.prop)
+		dplyr::mutate(scale_factor = survival.per.4week / survival.prop)
 
 	surv_mu_summary <- surv_mu |>
 		dplyr::summarise(
@@ -220,11 +231,11 @@ create_surv_prior <- function(interval) {
 
 	surv_sd <- surv_var |>
 		dplyr::filter(survival.var.type == "SD") |>
-		mutate(sd = as.numeric(survival.var))
+		dplyr::mutate(sd = as.numeric(survival.var))
 
 	surv_sd_calc <- surv_var |>
 		dplyr::filter(survival.var.type == "95% CI") |>
-		mutate(
+		dplyr::mutate(
 			low.CI = as.numeric(stringr::str_extract(
 				survival.var,
 				"[[:graph:]]*(?=\\-)"
@@ -236,25 +247,29 @@ create_surv_prior <- function(interval) {
 			sd_low = (low.CI - survival.prop) / -1.96,
 			sd_high = (high.CI - survival.prop) / 1.96
 		) |>
-		group_by(unique.ID) |>
-		summarise(sd = max(sd_high, sd_low))
+		dplyr::group_by(unique.ID) |>
+		dplyr::summarise(sd = max(sd_high, sd_low))
 
-	surv_var_join <- left_join(surv_var, surv_sd_calc, by = join_by(unique.ID)) |>
+	surv_var_join <- dplyr::left_join(
+		surv_var,
+		surv_sd_calc,
+		by = join_by(unique.ID)
+	) |>
 		dplyr::filter(survival.var.type != "SD")
 
 	scale_ids <- surv_mu |>
-		select(unique.ID, scale_factor)
+		dplyr::select(unique.ID, scale_factor)
 
-	surv_variance <- bind_rows(surv_var_join, surv_sd) |>
-		left_join(scale_ids, by = join_by(unique.ID)) |>
-		mutate(
+	surv_variance <- dplyr::bind_rows(surv_var_join, surv_sd) |>
+		dplyr::left_join(scale_ids, by = join_by(unique.ID)) |>
+		dplyr::mutate(
 			variance = sd^2,
 			variance.4week = variance * scale_factor^2,
 			sd.4week = sqrt(variance.4week)
 		)
 
 	surv_sd_summary <- surv_variance |>
-		pull(sd.4week) |>
+		dplyr::pull(sd.4week) |>
 		mean()
 
 	mu <- surv_mu_summary$mu
@@ -271,7 +286,7 @@ create_surv_prior <- function(interval) {
 # matrix of landscape covariates for data model
 create_X <- function(df, cols = c("c_road_den", "c_rugged", "c_canopy")) {
 	df |>
-		select(all_of(cols)) |>
+		dplyr::select(all_of(cols)) |>
 		as.matrix()
 }
 
@@ -285,10 +300,10 @@ get_prior_hyperparams <- function(post_round, posterior_path = NULL) {
 
 		get_vec <- function(df, node) {
 			df |>
-				select(contains(node)) |>
-				pivot_longer(cols = everything(), names_to = "node") |>
-				group_by(node) |>
-				summarise(mu = mean(value), tau = 1 / var(value))
+				dplyr::select(contains(node)) |>
+				tidyr::pivot_longer(cols = everything(), names_to = "node") |>
+				dplyr::group_by(node) |>
+				dplyr::summarise(mu = mean(value), tau = 1 / var(value))
 		}
 
 		log_rho <- get_vec(post, "log_rho")
@@ -342,9 +357,9 @@ get_prior_hyperparams <- function(post_round, posterior_path = NULL) {
 get_n1_prior <- function(df) {
 	df |>
 		dplyr::filter(observed_timestep == 1) |>
-		group_by(property, property_area_km2) |>
-		reframe(total_take = sum(take)) |>
-		mutate(
+		dplyr::group_by(property, property_area_km2) |>
+		dplyr::reframe(total_take = sum(take)) |>
+		dplyr::mutate(
 			min_n = total_take + 5, # add a small buffer to allow for some unobserved pigs
 			abundance_min = min_n,
 			abundance_max = round(property_area_km2 * 100) + min_n
@@ -353,7 +368,7 @@ get_n1_prior <- function(df) {
 
 create_ids <- function(df) {
 	df |>
-		mutate(
+		dplyr::mutate(
 			property = as.numeric(as.factor(propertyID)),
 			county = as.numeric(as.factor(county_code)),
 			ppID = paste0(propertyID, "-", primary_period),
@@ -366,8 +381,8 @@ create_ids <- function(df) {
 # figure out if we need to keep sampling
 continue_mcmc <- function(mcmc, effective_size, max_psrf, verbose) {
 	message("Checking convergence and sample size")
-	psrf <- gelman.diag(mcmc, multivariate = FALSE)$psrf
-	effective_samples <- effectiveSize(mcmc)
+	psrf <- coda::gelman.diag(mcmc, multivariate = FALSE)$psrf
+	effective_samples <- coda::effectiveSize(mcmc)
 
 	converged <- all(psrf[, 2] < 1.1)
 	enough_samples <- all(effective_samples >= effective_size)
@@ -424,7 +439,7 @@ create_primary_periods <- function(df, interval, create_new = FALSE) {
 
 	message("Creating primary periods from start and end dates...")
 	if (interval == 28 && !create_new) {
-		timesteps <- map(
+		timesteps <- purrr::map(
 			seq_len(nrow(df)),
 			~ find_timestep(primary_periods, df$start.date[.x], df$end.date[.x]),
 			.progress = TRUE
@@ -439,7 +454,7 @@ create_primary_periods <- function(df, interval, create_new = FALSE) {
 		start_dates <- seq(min_date, max_date, by = paste(interval, "day"))
 		end_dates <- c(start_dates[-1] - 1, max_date)
 
-		primary_periods <- tibble(start_dates, end_dates) |>
+		primary_periods <- tibble::tibble(start_dates, end_dates) |>
 			mutate(timestep = seq_len(n()))
 		primary_periods$month <- month(timestep_df$end_dates)
 		primary_periods$year <- year(timestep_df$end_dates)
@@ -447,7 +462,7 @@ create_primary_periods <- function(df, interval, create_new = FALSE) {
 		stop("Interval not supported")
 	}
 
-	timesteps <- map(
+	timesteps <- purrr::map(
 		seq_len(nrow(df)),
 		~ find_timestep(primary_periods, df$start.date[.x], df$end.date[.x]),
 		.progress = TRUE
@@ -456,24 +471,24 @@ create_primary_periods <- function(df, interval, create_new = FALSE) {
 		as.integer()
 
 	tmp <- df |>
-		mutate(timestep = timesteps)
+		dplyr::mutate(timestep = timesteps)
 
-	df_time <- left_join(tmp, primary_periods)
+	df_time <- dplyr::left_join(tmp, primary_periods)
 	df_test <- df_time |> dplyr::filter(!is.na(timestep))
 
 	testthat::expect_all_true(df_test$start.date >= df_test$start_dates)
 	testthat::expect_all_true(df_test$end.date <= df_test$end_dates)
 
 	df_test |>
-		arrange(propertyID, timestep)
+		dplyr::arrange(propertyID, timestep)
 }
 
 # resolve duplicate property values - when there are multiple values, take max
 resolve_duplicate <- function(insitu_data) {
 	property_areas <- insitu_data |>
-		distinct(propertyID, property_area_km2) |>
-		group_by(propertyID) |>
-		summarize(
+		dplyr::distinct(propertyID, property_area_km2) |>
+		dplyr::group_by(propertyID) |>
+		dplyr::summarize(
 			n_areas = length(unique(property_area_km2)),
 			property_area_max = max(property_area_km2, na.rm = TRUE),
 			# properties with all NA areas get -Inf
@@ -484,10 +499,13 @@ resolve_duplicate <- function(insitu_data) {
 				property_area_km2
 			)
 		) |>
-		ungroup()
+		dplyr::ungroup()
 
 	insitu_data |>
-		left_join(property_areas, by = join_by(propertyID, property_area_km2)) |>
+		dplyr::left_join(
+			property_areas,
+			by = join_by(propertyID, property_area_km2)
+		) |>
 		dplyr::filter(
 			!is.na(property_area_km2),
 			property_area_km2 >= 1.8,
@@ -499,32 +517,32 @@ resolve_duplicate <- function(insitu_data) {
 # and there are at least 2 timesteps for each property
 dynamic_filter <- function(df) {
 	good_events <- df |>
-		select(propertyID, timestep) |>
-		group_by(propertyID, timestep) |>
-		mutate(two_plus_takes = n() >= 2) |>
+		dplyr::select(propertyID, timestep) |>
+		dplyr::group_by(propertyID, timestep) |>
+		dplyr::mutate(two_plus_takes = n() >= 2) |>
 		dplyr::filter(two_plus_takes) |>
-		group_by(propertyID) |>
-		arrange(propertyID, timestep) |>
-		distinct() |>
-		mutate(n_timesteps = length(unique(timestep))) |>
+		dplyr::group_by(propertyID) |>
+		dplyr::arrange(propertyID, timestep) |>
+		dplyr::distinct() |>
+		dplyr::mutate(n_timesteps = length(unique(timestep))) |>
 		dplyr::filter(n_timesteps >= 2) |>
-		ungroup() |>
-		mutate(event_id = paste0(propertyID, "-", timestep)) |>
-		pull(event_id)
+		dplyr::ungroup() |>
+		dplyr::mutate(event_id = paste0(propertyID, "-", timestep)) |>
+		dplyr::pull(event_id)
 
 	df |>
-		mutate(event_id = paste0(propertyID, "-", timestep)) |>
+		dplyr::mutate(event_id = paste0(propertyID, "-", timestep)) |>
 		dplyr::filter(event_id %in% good_events) |>
-		arrange(propertyID, timestep)
+		dplyr::arrange(propertyID, timestep)
 }
 
 take_filter <- function(df) {
 	zero_take_prp <- df |>
-		group_by(propertyID) |>
-		summarise(sum_take = sum(take)) |>
-		ungroup() |>
+		dplyr::group_by(propertyID) |>
+		dplyr::summarise(sum_take = sum(take)) |>
+		dplyr::ungroup() |>
 		dplyr::filter(sum_take == 0) |>
-		pull(propertyID)
+		dplyr::pull(propertyID)
 
 	df |> dplyr::filter(!propertyID %in% zero_take_prp)
 }
@@ -532,9 +550,9 @@ take_filter <- function(df) {
 # compute ordering based on time interval midpoints
 order_interval <- function(df) {
 	df |>
-		distinct() |>
-		mutate(midpoint = as.numeric(end.date)) |>
-		ungroup()
+		dplyr::distinct() |>
+		dplyr::mutate(midpoint = as.numeric(end.date)) |>
+		dplyr::ungroup()
 }
 
 # impose stochastic ordering of events by adding jitter
@@ -545,10 +563,10 @@ order_interval <- function(df) {
 # 3. hunting
 order_stochastic <- function(order.df) {
 	n_methods_mid <- order.df |>
-		select(propertyID, midpoint, method) |>
-		group_by(propertyID, midpoint) |>
-		count() |>
-		arrange(propertyID, midpoint)
+		dplyr::select(propertyID, midpoint, method) |>
+		dplyr::group_by(propertyID, midpoint) |>
+		dplyr::count() |>
+		dplyr::arrange(propertyID, midpoint)
 
 	set.seed(8)
 
@@ -575,17 +593,17 @@ order_stochastic <- function(order.df) {
 # now compute orders of events based on jittered midpoints
 order_of_events <- function(order_df) {
 	df <- order_df |>
-		ungroup() |>
-		group_by(propertyID, timestep) |>
-		mutate(
+		dplyr::ungroup() |>
+		dplyr::group_by(propertyID, timestep) |>
+		dplyr::mutate(
 			order = order(jittered_midpoint),
 			has_multi = any(order > 1),
 			any_ties = any(duplicated(jittered_midpoint)),
 			n_survey = n()
 		) |>
-		ungroup() |>
-		arrange(propertyID, timestep, order) |>
-		mutate(p = seq_len(n()))
+		dplyr::ungroup() |>
+		dplyr::arrange(propertyID, timestep, order) |>
+		dplyr::mutate(p = seq_len(n()))
 
 	testthat::expect_all_true(df$has_multi)
 	testthat::expect_all_true(!df$any_ties)
@@ -596,14 +614,14 @@ order_of_events <- function(order_df) {
 
 county_codes <- function(df) {
 	df |>
-		rename(statefp = st_gsa_state_cd, countyfp = cnty_gsa_cnty_cd) |>
-		mutate(
+		dplyr::rename(statefp = st_gsa_state_cd, countyfp = cnty_gsa_cnty_cd) |>
+		dplyr::mutate(
 			countyfp = sprintf("%03d", countyfp),
 			countyfp = ifelse(cnty_name == "HUMBOLDT (E)", "013", countyfp),
 			county_code = as.numeric(paste0(statefp, countyfp)),
 			county_code = sprintf("%05d", county_code)
 		) |> # need this for joining downstream
-		select(
+		dplyr::select(
 			propertyID,
 			agrp_prp_id,
 			alws_agrprop_id,
@@ -623,11 +641,11 @@ county_codes <- function(df) {
 			n_survey,
 			p
 		) |>
-		rename(primary_period = timestep)
+		dplyr::rename(primary_period = timestep)
 }
 
 get_fips <- function(file = "data/fips/national_county.txt") {
-	fips <- read_csv(
+	fips <- readr::read_csv(
 		file,
 		show_col_types = FALSE,
 		col_names = c("state", "statefp", "countyfp", "countyname", "classfp"),
@@ -640,53 +658,53 @@ get_ts_length <- function(df) {
 		dplyr::filter(
 			!st_name %in% c("CALIFORNIA", "ALABAMA", "ARIZONA", "ARKANSAS")
 		) |>
-		select(propertyID, primary_period) |>
-		distinct() |>
-		group_by(propertyID) |>
+		dplyr::select(propertyID, primary_period) |>
+		dplyr::distinct() |>
+		dplyr::group_by(propertyID) |>
 		dplyr::filter(
 			primary_period == min(primary_period) |
 				primary_period == max(primary_period)
 		) |>
-		mutate(delta = c(0, diff(primary_period) + 1)) |>
-		ungroup() |>
+		dplyr::mutate(delta = c(0, diff(primary_period) + 1)) |>
+		dplyr::ungroup() |>
 		dplyr::filter(delta != 0)
 }
 
 get_n_observations <- function(df, good_props) {
 	df |>
 		dplyr::filter(propertyID %in% good_props) |>
-		group_by(propertyID, primary_period) |>
-		summarise(take = sum(take)) |>
-		ungroup() |>
-		group_by(propertyID) |>
-		count()
+		dplyr::group_by(propertyID, primary_period) |>
+		dplyr::summarise(take = sum(take)) |>
+		dplyr::ungroup() |>
+		dplyr::group_by(propertyID) |>
+		dplyr::count()
 }
 
 condition_first_capture <- function(df) {
 	good_events <- df |>
-		group_by(propertyID, timestep) |>
-		summarise(take = sum(take)) |>
-		ungroup() |>
-		group_by(propertyID) |>
-		mutate(cumulative_take = cumsum(take)) |>
-		ungroup() |>
+		dplyr::group_by(propertyID, timestep) |>
+		dplyr::summarise(take = sum(take)) |>
+		dplyr::ungroup() |>
+		dplyr::group_by(propertyID) |>
+		dplyr::mutate(cumulative_take = cumsum(take)) |>
+		dplyr::ungroup() |>
 		dplyr::filter(cumulative_take > 0) |>
-		mutate(event_id = paste0(propertyID, "-", timestep)) |>
-		pull(event_id)
+		dplyr::mutate(event_id = paste0(propertyID, "-", timestep)) |>
+		dplyr::pull(event_id)
 
 	df |>
-		mutate(event_id = paste0(propertyID, "-", timestep)) |>
+		dplyr::mutate(event_id = paste0(propertyID, "-", timestep)) |>
 		dplyr::filter(event_id %in% good_events) |>
-		arrange(propertyID, timestep)
+		dplyr::arrange(propertyID, timestep)
 }
 
 create_timestep_df <- function(df) {
 	df |>
-		select(propertyID, primary_period) |>
+		dplyr::select(propertyID, primary_period) |>
 		unique() |>
-		arrange(propertyID, primary_period) |>
-		group_by(propertyID) |>
-		mutate(observed_timestep = seq_len(n())) |> # timestep is the sequence of primary periods within a property
-		ungroup() |>
-		mutate(primary_period = primary_period - min(primary_period) + 1)
+		dplyr::arrange(propertyID, primary_period) |>
+		dplyr::group_by(propertyID) |>
+		dplyr::mutate(observed_timestep = seq_len(n())) |> # timestep is the sequence of primary periods within a property
+		dplyr::ungroup() |>
+		dplyr::mutate(primary_period = primary_period - min(primary_period) + 1)
 }

@@ -117,7 +117,7 @@ nimble_removal_model <- function() {
 #' @import nimble
 #' @return log of the potential area surveyed
 #' @export
-calc_log_potential_area <- nimbleFunction(
+calc_log_potential_area <- nimble::nimbleFunction(
   run = function(
     log_rho = double(1),
     log_gamma = double(1),

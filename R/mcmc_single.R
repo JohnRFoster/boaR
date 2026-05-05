@@ -21,10 +21,8 @@ single_mcmc_chain <- function(
   custom_samplers = NULL,
   monitors_add = NULL
 ) {
-  library(nimble)
-
-  Rmodel <- nimbleModel(
-    code = model_code, # comes from sourcing the model above
+  Rmodel <- nimble::nimbleModel(
+    code = model_code,
     constants = model_constants,
     data = model_data,
     inits = init,
@@ -53,7 +51,7 @@ single_mcmc_chain <- function(
   # }
 
   # default MCMC configuration
-  mcmcConf <- configureMCMC(Rmodel, useConjugacy = TRUE)
+  mcmcConf <- nimble::configureMCMC(Rmodel, useConjugacy = TRUE)
 
   control_rw <- list(
     adaptInterval = 100,
@@ -87,13 +85,13 @@ single_mcmc_chain <- function(
     mcmcConf$addMonitors(monitors_add)
   }
 
-  Rmcmc <- buildMCMC(mcmcConf)
-  Cmodel <- compileNimble(Rmodel)
+  Rmcmc <- nimble::buildMCMC(mcmcConf)
+  Cmodel <- nimble::compileNimble(Rmodel)
 
   # need to define this in the global environment to continue mcmc when running in parallel
-  Cmcmc <<- compileNimble(Rmcmc)
+  Cmcmc <<- nimble::compileNimble(Rmcmc)
 
   Cmcmc$run(niter = n_iter, nburnin = n_iter / 2, thin = 10)
-  samples <- as.matrix(Cmcmc$mvSamples)
+  samples <- coda::as.matrix(Cmcmc$mvSamples)
   return(samples)
 }

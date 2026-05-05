@@ -9,9 +9,9 @@
 #' @export
 
 get_data <- function(file, interval, create_new) {
-	all_take <- read_csv(file, show_col_types = FALSE) |>
+	all_take <- readr::read_csv(file, show_col_types = FALSE) |>
 		dplyr::filter(start.date >= lubridate::ymd("2014-01-01")) |>
-		mutate(
+		dplyr::mutate(
 			cnty_name = if_else(
 				grepl("ST ", cnty_name),
 				gsub("ST ", "ST. ", cnty_name),
@@ -21,9 +21,9 @@ get_data <- function(file, interval, create_new) {
 		)
 
 	data_mis <- all_take |>
-		mutate(property_area_km2 = round(property.size * 0.00404686, 2)) |>
+		dplyr::mutate(property_area_km2 = round(property.size * 0.00404686, 2)) |>
 		dplyr::filter(property_area_km2 >= 1.8, st_name != "HAWAII") |>
-		mutate(
+		dplyr::mutate(
 			effort = if_else(
 				cmp_name %in% c("TRAPS, CAGE", "SNARE"),
 				cmp.days,
@@ -32,11 +32,11 @@ get_data <- function(file, interval, create_new) {
 			effort_per = effort / cmp.qty,
 			cmp_name = if_else(cmp_name == "TRAPS, CAGE", "TRAPS", cmp_name)
 		) |>
-		rename(method = cmp_name, trap_count = cmp.qty) |>
-		select(-wt_work_date, -hours, -cmp.hours, -cmp.days) |>
-		distinct() |>
-		mutate(propertyID = paste0(agrp_prp_id, "-", alws_agrprop_id)) |>
-		arrange(propertyID, start.date, end.date)
+		dplyr::rename(method = cmp_name, trap_count = cmp.qty) |>
+		dplyr::select(-wt_work_date, -hours, -cmp.hours, -cmp.days) |>
+		dplyr::distinct() |>
+		dplyr::mutate(propertyID = paste0(agrp_prp_id, "-", alws_agrprop_id)) |>
+		dplyr::arrange(propertyID, start.date, end.date)
 
 	# create PP of length [interval]
 	data_timestep <- create_primary_periods(data_mis, interval, create_new) |>
@@ -56,19 +56,19 @@ get_data <- function(file, interval, create_new) {
 	# removal events within a property
 	timestep_df <- create_timestep_df(data_timestep)
 
-	data_mis <- left_join(
+	data_mis <- dplyr::left_join(
 		data_timestep,
 		timestep_df,
 		by = join_by(propertyID, primary_period)
 	) |>
-		mutate(primary_period = primary_period - min(primary_period) + 1)
+		dplyr::mutate(primary_period = primary_period - min(primary_period) + 1)
 
 	## observation covariates ----
 	# TODO get more (and updated) observation covariates
 	data_obs <- get_obs_covars(land_csv)
 
 	## join MIS with observation covariates ----
-	data_join <- left_join(data_mis, data_obs, by = join_by(county_code))
+	data_join <- dplyr::left_join(data_mis, data_obs, by = join_by(county_code))
 	data_join |>
 		dplyr::filter(!is.na(c_road_den)) |>
 		create_ids()
@@ -78,17 +78,17 @@ get_data <- function(file, interval, create_new) {
 # Deal with observation covariates, a small percentage of which are missing
 get_obs_covars <- function(df) {
 	df |>
-		mutate(county_code = sprintf("%05d", FIPS)) |>
+		dplyr::mutate(county_code = sprintf("%05d", FIPS)) |>
 		dplyr::select(-starts_with('sd'), -NAME, -FIPS) |>
-		group_by(STATE_NAME) |>
-		mutate(
+		dplyr::group_by(STATE_NAME) |>
+		dplyr::mutate(
 			rural.road.density = mean_impute(rural.road.density),
 			prop.pub.land = mean_impute(prop.pub.land),
 			mean.ruggedness = mean_impute(mean.ruggedness),
 			mean.canopy.density = mean_impute(mean.canopy.density)
 		) |>
-		ungroup() |>
-		mutate(
+		dplyr::ungroup() |>
+		dplyr::mutate(
 			c_road_den = center_scale(rural.road.density),
 			c_rugged = center_scale(mean.ruggedness),
 			c_canopy = center_scale(mean.canopy.density)

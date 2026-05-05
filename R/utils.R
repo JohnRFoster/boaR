@@ -23,8 +23,6 @@ subset_mcmc <- function(node) {
 
 # get parameter nodes using subset_mcmc
 subset_params <- function() {
-	require(dplyr)
-	require(purrr)
 	map_dfc(lapply(params_check, subset_mcmc), as_tibble) |> as.matrix()
 }
 

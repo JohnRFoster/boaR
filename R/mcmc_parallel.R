@@ -28,9 +28,6 @@ mcmc_parallel <- function(
 	monitors_add = NULL,
 	custom_samplers = NULL
 ) {
-	# add function arguments to the local environment, needed for exporting to 'cl'
-	# as.list(environment(), all = TRUE)
-
 	export <- c(
 		"single_mcmc_chain",
 		"continue_sampling",

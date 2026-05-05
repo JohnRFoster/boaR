@@ -41,23 +41,36 @@ mcmc_parallel <- function(
 		"model_code",
 		"model_data",
 		"model_constants",
+		"nimble_inits",
 		"n_iters",
 		"custom_samplers",
 		"monitors_add",
-		"params_check"
+		"params_check",
+		"calc_log_potential_area"
 	)
 
 	clusterExport(cl, export, envir = environment())
 
-	for (i in seq_along(cl)) {
-		init <- model_inits[[i]]
-		clusterExport(cl[i], "init", envir = environment())
-	}
+	# for (i in seq_along(cl)) {
+	# 	init <- model_inits[[i]]
+	# 	clusterExport(cl[i], "init", envir = environment())
+	# }
 
 	# initialize model and first samples
 	c <- 1
 	start <- Sys.time()
-	out <- clusterEvalQ(cl, single_mcmc_chain())
+	out <- clusterEvalQ(
+		cl,
+		single_mcmc_chain(
+			model_constants = model_constants,
+			model_data = model_data,
+			model_code = model_code,
+			init = nimble_inits(model_constants, model_data, buffer = 200),
+			n_iter = n_iters,
+			custom_samplers = NULL,
+			monitors_add = monitors_add
+		)
+	)
 	message("Model compile and initial 1000 iterations completed in:")
 	print(round(Sys.time() - start, 2))
 

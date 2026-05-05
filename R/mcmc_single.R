@@ -21,7 +21,7 @@ single_mcmc_chain <- function(
   custom_samplers = NULL,
   monitors_add = NULL
 ) {
-  require(nimble)
+  library(nimble)
 
   Rmodel <- nimbleModel(
     code = model_code, # comes from sourcing the model above

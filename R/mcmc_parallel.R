@@ -46,6 +46,9 @@ mcmc_parallel <- function(
 	)
 
 	parallel::clusterExport(cl, export, envir = environment())
+	parallel::clusterEvalQ(cl, {
+		library(boaR)
+	})
 
 	# for (i in seq_along(cl)) {
 	# 	init <- model_inits[[i]]

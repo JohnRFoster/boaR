@@ -82,7 +82,7 @@ create_all_primary_periods <- function(df) {
 
 	all_pp <- tibble::tibble()
 	message("\nInclude all primary periods")
-	pb <- txtProgressBar(max = length(properties), style = 1)
+	pb <- utils::txtProgressBar(max = length(properties), style = 1)
 	for (i in seq_along(properties)) {
 		pid <- pp_min_max |> dplyr::filter(property == properties[i])
 		p_min <- min(pid$primary_period)
@@ -93,7 +93,7 @@ create_all_primary_periods <- function(df) {
 			timestep = seq_along(p_min:p_max)
 		)
 		all_pp <- dplyr::bind_rows(all_pp, pp)
-		setTxtProgressBar(pb, i)
+		utils::setTxtProgressBar(pb, i)
 	}
 	close(pb)
 	all_pp |> dplyr::mutate(n_id = seq_len(n()))
@@ -164,7 +164,7 @@ create_start_end <- function(df_take, df_pp) {
 	df <- dplyr::left_join(df_take, df_pp, by = join_by(primary_period, property))
 
 	message("Creating start/end indicies")
-	pb <- txtProgressBar(max = nrow(df), style = 1)
+	pb <- utils::txtProgressBar(max = nrow(df), style = 1)
 	for (i in seq_len(nrow(df))) {
 		if (df$order[i] > 1) {
 			idx <- which(
@@ -177,7 +177,7 @@ create_start_end <- function(df_take, df_pp) {
 			end[i] <- idx[length(idx)]
 			testthat::expect_equal(idx, start[i]:end[i])
 		}
-		setTxtProgressBar(pb, i)
+		utils::setTxtProgressBar(pb, i)
 	}
 	close(pb)
 	tibble::tibble(start = start, end = end)
@@ -573,7 +573,7 @@ order_stochastic <- function(order.df) {
 	order_df <- order.df
 	order_df$jittered_midpoint <- NA
 	message("Stochastic ordering...")
-	pb <- txtProgressBar(max = nrow(order_df), style = 1)
+	pb <- utils::txtProgressBar(max = nrow(order_df), style = 1)
 	for (i in seq_len(nrow(order_df))) {
 		if (order_df$method[i] %in% c('Trap', 'Snare')) {
 			order_df$jittered_midpoint[i] <- order_df$midpoint[i] +
@@ -585,7 +585,7 @@ order_stochastic <- function(order.df) {
 			order_df$jittered_midpoint[i] <- order_df$midpoint[i] +
 				runif(1, min = .04, max = .05)
 		}
-		setTxtProgressBar(pb, i)
+		utils::setTxtProgressBar(pb, i)
 	}
 	order_df
 }

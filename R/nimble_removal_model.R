@@ -115,7 +115,6 @@ nimble_removal_model <- function() {
 #' @param n_trap_m1 scalar of number of traps minus 1 for each survey
 #' @param log_pi log of pi
 #' @param method method index for each survey
-#' @import nimble
 #' @return log of the potential area surveyed
 #' @export
 calc_log_potential_area <- nimble::nimbleFunction(

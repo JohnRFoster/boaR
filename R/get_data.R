@@ -3,8 +3,6 @@
 #' @param interval The number of days in each primary period.
 #' @param create_new Whether to create new primary periods or use existing ones (from calibration).
 #'
-#' @import dplyr
-#' @import readr
 #'
 #' @export
 

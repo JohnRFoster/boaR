@@ -12,7 +12,6 @@
 #'@param monitors_add vector of nodes to monitor in addition to default nodes
 #'@param custom_samplers data frame of mcmc config. Nodes in one column, sampler types in another
 #'
-#'@import nimble
 #'
 #'@export
 

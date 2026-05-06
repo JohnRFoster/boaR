@@ -8,7 +8,6 @@
 #' @param custom_samplers A data frame specifying custom samplers to use. Should have columns "node" and "type".
 #' @param monitors_add A character vector of additional nodes to monitor.
 #'
-#' @import nimble
 #' @return A matrix of MCMC samples.
 #' @export
 

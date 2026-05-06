@@ -2,6 +2,7 @@
 # TODO update this when published
 #' @description This model is based on the removal model described in Foster et al. 2025 (doi.org/10.1101/2025.10.16.680799)
 #' @return model code
+#' @import nimble
 #' @export
 
 nimble_removal_model <- function() {

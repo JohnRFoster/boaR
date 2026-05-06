@@ -91,6 +91,6 @@ single_mcmc_chain <- function(
   Cmcmc <<- nimble::compileNimble(Rmcmc)
 
   Cmcmc$run(niter = n_iter, nburnin = n_iter / 2, thin = 10)
-  samples <- coda::as.matrix(Cmcmc$mvSamples)
+  samples <- as.matrix(Cmcmc$mvSamples)
   return(samples)
 }

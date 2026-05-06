@@ -5,7 +5,7 @@
 # drop previous samples (we save them after each time this function is called, so we don't need them)
 continue_sampling <- function() {
 	Cmcmc$run(niter = n_iters, reset = FALSE, resetMV = TRUE, thin = 10)
-	samples <<- coda::as.matrix(Cmcmc$mvSamples) # need to define this in the global environment to use in subset_mcmc
+	samples <<- as.matrix(Cmcmc$mvSamples) # need to define this in the global environment to use in subset_mcmc
 	samples
 }
 

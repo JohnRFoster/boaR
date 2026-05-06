@@ -21,6 +21,8 @@ single_mcmc_chain <- function(
   custom_samplers = NULL,
   monitors_add = NULL
 ) {
+  requireNamespace("nimble")
+
   Rmodel <- nimble::nimbleModel(
     code = model_code,
     constants = model_constants,

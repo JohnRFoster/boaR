@@ -28,6 +28,8 @@ mcmc_parallel <- function(
 	monitors_add = NULL,
 	custom_samplers = NULL
 ) {
+	requireNamespace("nimble")
+
 	export <- c(
 		"single_mcmc_chain",
 		"continue_sampling",
@@ -46,11 +48,11 @@ mcmc_parallel <- function(
 		"calc_log_potential_area"
 	)
 
-	clusterExport(cl, export, envir = environment())
+	parallel::clusterExport(cl, export, envir = environment())
 
 	# for (i in seq_along(cl)) {
 	# 	init <- model_inits[[i]]
-	# 	clusterExport(cl[i], "init", envir = environment())
+	# 	parallel::clusterExport(cl[i], "init", envir = environment())
 	# }
 
 	# initialize model and first samples

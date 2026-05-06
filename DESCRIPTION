@@ -24,4 +24,5 @@ Imports:
     utils,
     withr
 Depends: 
-    R (>= 3.5)
+    R (>= 3.5),
+    nimble (>= 1.4.2)

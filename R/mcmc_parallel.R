@@ -28,8 +28,6 @@ mcmc_parallel <- function(
 	monitors_add = NULL,
 	custom_samplers = NULL
 ) {
-	requireNamespace("nimble")
-
 	export <- c(
 		"single_mcmc_chain",
 		"continue_sampling",

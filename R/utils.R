@@ -83,14 +83,7 @@ create_all_primary_periods <- function(df) {
 	all_pp <- tibble::tibble()
 	message("\nInclude all primary periods")
 
-	if (!getOption("pbStyle", default = 3)) {
-		# will be used if pbStyle is not set by the user (i.e. the default)
-		pb <- utils::txtProgressBar(max = length(properties), style = 3)
-	} else {
-		# if the user calls: options(list(pbStyle = #))
-		# the function will use style pbStyle.
-		pb <- utils::txtProgressBar(max = length(properties), style = pbStyle)
-	}
+	pb <- make_pb(1, length(properties))
 
 	for (i in seq_along(properties)) {
 		pid <- pp_min_max |> dplyr::filter(property == properties[i])
@@ -174,14 +167,7 @@ create_start_end <- function(df_take, df_pp) {
 
 	message("Creating start/end indicies")
 
-	if (!getOption("pbStyle", default = 3)) {
-		# will be used if pbStyle is not set by the user (i.e. the default)
-		pb <- utils::txtProgressBar(max = nrow(df), style = 3)
-	} else {
-		# if the user calls: options(list(pbStyle = #))
-		# the function will use style pbStyle.
-		pb <- utils::txtProgressBar(max = nrow(df), style = pbStyle)
-	}
+	pb <- make_pb(1, nrow(df))
 
 	for (i in seq_len(nrow(df))) {
 		if (df$order[i] > 1) {
@@ -592,14 +578,7 @@ order_stochastic <- function(order.df) {
 	order_df$jittered_midpoint <- NA
 	message("Stochastic ordering...")
 
-	if (!getOption("pbStyle", default = 3)) {
-		# will be used if pbStyle is not set by the user (i.e. the default)
-		pb <- utils::txtProgressBar(max = nrow(order_df), style = 3)
-	} else {
-		# if the user calls: options(list(pbStyle = #))
-		# the function will use style pbStyle.
-		pb <- utils::txtProgressBar(max = nrow(order_df), style = pbStyle)
-	}
+	pb <- make_pb(1, nrow(order_df))
 
 	for (i in seq_len(nrow(order_df))) {
 		if (order_df$method[i] %in% c('Trap', 'Snare')) {
@@ -770,18 +749,7 @@ collate_mcmc_chunks <- function(dest, start = 1) {
 	if (length(mcmc_dirs) >= 2) {
 		use_pb <- if_else(length(mcmc_dirs) == 2, FALSE, TRUE)
 		if (use_pb) {
-			if (!getOption("pbStyle", default = 3)) {
-				# will be used if pbStyle is not set by the user (i.e. the default)
-				pb <- utils::txtProgressBar(min = 2, max = length(mcmc_dirs), style = 3)
-			} else {
-				# if the user calls: options(list(pbStyle = #))
-				# the function will use style pbStyle.
-				pb <- utils::txtProgressBar(
-					min = 2,
-					max = length(mcmc_dirs),
-					style = pbStyle
-				)
-			}
+			pb <- make_pb(2, length(mcmc_dirs))
 		}
 
 		# read each mcmc chunk, store each chain from the chunk as a matrix
@@ -826,4 +794,27 @@ collate_mcmc_chunks <- function(dest, start = 1) {
 	}
 
 	return(list(params = params, states = states))
+}
+
+
+.onLoad <- function(libname, pkgname) {
+	# get the existing options
+	op <- options()
+
+	op_boar <- list(
+		pbStyle = 3
+	)
+
+	# what needs to be set
+	toset <- !(names(op_boar) %in% names(op))
+
+	# set to the default
+	if (any(toset)) {
+		options(op_boar[toset])
+	}
+	invisible()
+}
+
+make_pb <- function(min, max, style = getOption("pbStyle", 3)) {
+	utils::txtProgressBar(min = min, max = max, style = style)
 }

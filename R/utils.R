@@ -82,7 +82,16 @@ create_all_primary_periods <- function(df) {
 
 	all_pp <- tibble::tibble()
 	message("\nInclude all primary periods")
-	pb <- utils::txtProgressBar(max = length(properties), style = 1)
+
+	if (!getOption("pbStyle", default = 3)) {
+		# will be used if pbStyle is not set by the user (i.e. the default)
+		pb <- utils::txtProgressBar(max = length(properties), style = 3)
+	} else {
+		# if the user calls: options(list(pbStyle = #))
+		# the function will use style pbStyle.
+		pb <- utils::txtProgressBar(max = length(properties), style = pbStyle)
+	}
+
 	for (i in seq_along(properties)) {
 		pid <- pp_min_max |> dplyr::filter(property == properties[i])
 		p_min <- min(pid$primary_period)
@@ -164,7 +173,16 @@ create_start_end <- function(df_take, df_pp) {
 	df <- dplyr::left_join(df_take, df_pp, by = join_by(primary_period, property))
 
 	message("Creating start/end indicies")
-	pb <- utils::txtProgressBar(max = nrow(df), style = 1)
+
+	if (!getOption("pbStyle", default = 3)) {
+		# will be used if pbStyle is not set by the user (i.e. the default)
+		pb <- utils::txtProgressBar(max = nrow(df), style = 3)
+	} else {
+		# if the user calls: options(list(pbStyle = #))
+		# the function will use style pbStyle.
+		pb <- utils::txtProgressBar(max = nrow(df), style = pbStyle)
+	}
+
 	for (i in seq_len(nrow(df))) {
 		if (df$order[i] > 1) {
 			idx <- which(
@@ -573,7 +591,16 @@ order_stochastic <- function(order.df) {
 	order_df <- order.df
 	order_df$jittered_midpoint <- NA
 	message("Stochastic ordering...")
-	pb <- utils::txtProgressBar(max = nrow(order_df), style = 1)
+
+	if (!getOption("pbStyle", default = 3)) {
+		# will be used if pbStyle is not set by the user (i.e. the default)
+		pb <- utils::txtProgressBar(max = nrow(order_df), style = 3)
+	} else {
+		# if the user calls: options(list(pbStyle = #))
+		# the function will use style pbStyle.
+		pb <- utils::txtProgressBar(max = nrow(order_df), style = pbStyle)
+	}
+
 	for (i in seq_len(nrow(order_df))) {
 		if (order_df$method[i] %in% c('Trap', 'Snare')) {
 			order_df$jittered_midpoint[i] <- order_df$midpoint[i] +
@@ -743,7 +770,18 @@ collate_mcmc_chunks <- function(dest, start = 1) {
 	if (length(mcmc_dirs) >= 2) {
 		use_pb <- if_else(length(mcmc_dirs) == 2, FALSE, TRUE)
 		if (use_pb) {
-			pb <- utils::txtProgressBar(min = 2, max = length(mcmc_dirs), style = 1)
+			if (!getOption("pbStyle", default = 3)) {
+				# will be used if pbStyle is not set by the user (i.e. the default)
+				pb <- utils::txtProgressBar(min = 2, max = length(mcmc_dirs), style = 3)
+			} else {
+				# if the user calls: options(list(pbStyle = #))
+				# the function will use style pbStyle.
+				pb <- utils::txtProgressBar(
+					min = 2,
+					max = length(mcmc_dirs),
+					style = pbStyle
+				)
+			}
 		}
 
 		# read each mcmc chunk, store each chain from the chunk as a matrix

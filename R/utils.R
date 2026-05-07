@@ -708,3 +708,84 @@ create_timestep_df <- function(df) {
 		dplyr::ungroup() |>
 		dplyr::mutate(primary_period = primary_period - min(primary_period) + 1)
 }
+
+
+collate_mcmc_chunks <- function(dest, start = 1) {
+	mcmc_dirs <- list.files(dest)
+	mcmc_dirs <- setdiff(mcmc_dirs, "modelData.rds")
+	mcmc_dirs <- mcmc_dirs[start:length(mcmc_dirs)]
+	param_file_name <- "paramSamples.rds"
+	state_file_name <- "observedAbundanceSamples.rds"
+
+	# use the first mcmc chunk to initialize storage for each chain
+	mcmc_rds <- file.path(dest, mcmc_dirs[1], param_file_name)
+	rds <- readr::read_rds(mcmc_rds)
+	mcmc <- rds$params
+	n_chains <- length(mcmc)
+	store_mcmc <- list()
+	store_mcmc_state <- list()
+	state_count <- 0
+
+	# store each chain, will append below
+	for (j in seq_len(n_chains)) {
+		store_mcmc[[j]] <- as.matrix(mcmc[[j]])
+	}
+
+	state_rds <- file.path(dest, mcmc_dirs[1], state_file_name)
+	if (file.exists(state_rds)) {
+		state_count <- 1
+		mcmc <- readr::read_rds(state_rds)
+		for (j in seq_len(n_chains)) {
+			store_mcmc_state[[j]] <- as.matrix(mcmc[[j]])
+		}
+	}
+
+	if (length(mcmc_dirs) >= 2) {
+		use_pb <- if_else(length(mcmc_dirs) == 2, FALSE, TRUE)
+		if (use_pb) {
+			pb <- utils::txtProgressBar(min = 2, max = length(mcmc_dirs), style = 1)
+		}
+
+		# read each mcmc chunk, store each chain from the chunk as a matrix
+		for (i in 2:length(mcmc_dirs)) {
+			mcmc_rds <- file.path(dest, mcmc_dirs[i], param_file_name)
+			rds <- readr::read_rds(mcmc_rds)
+			mcmc <- rds$params
+			for (j in seq_len(n_chains)) {
+				store_mcmc[[j]] <- rbind(store_mcmc[[j]], as.matrix(mcmc[[j]]))
+			}
+
+			state_rds <- file.path(dest, mcmc_dirs[i], state_file_name)
+			if (file.exists(state_rds)) {
+				mcmc <- readr::read_rds(state_rds)
+
+				if (state_count == 0) {
+					for (j in seq_len(n_chains)) {
+						store_mcmc_state[[j]] <- as.matrix(mcmc[[j]])
+					}
+				} else {
+					for (j in seq_len(n_chains)) {
+						store_mcmc_state[[j]] <- rbind(
+							store_mcmc_state[[j]],
+							as.matrix(mcmc[[j]])
+						)
+					}
+				}
+				state_count <- 1
+			}
+			if (use_pb) utils::setTxtProgressBar(pb, i)
+		}
+		if (use_pb) close(pb)
+	}
+
+	# need to create an mcmc list object to check for convergence
+	params <- as.mcmc.list(lapply(store_mcmc, as.mcmc))
+
+	if (state_count == 1) {
+		states <- as.mcmc.list(lapply(purrr::compact(store_mcmc_state), as.mcmc))
+	} else {
+		states <- list()
+	}
+
+	return(list(params = params, states = states))
+}

@@ -28,21 +28,12 @@ mcmc_parallel <- function(
 	custom_samplers = NULL
 ) {
 	export <- c(
-		"single_mcmc_chain",
-		"continue_sampling",
-		"subset_mcmc",
-		"subset_params",
-		"subset_N_observed",
-		"subset_N_unobserved",
-		"model_code",
 		"model_data",
 		"model_constants",
-		"nimble_inits",
 		"n_iters",
 		"custom_samplers",
 		"monitors_add",
-		"params_check",
-		"calc_log_potential_area"
+		"params_check"
 	)
 
 	parallel::clusterExport(cl, export, envir = environment())
@@ -50,10 +41,10 @@ mcmc_parallel <- function(
 		library(boaR)
 	})
 
-	# for (i in seq_along(cl)) {
-	# 	init <- model_inits[[i]]
-	# 	parallel::clusterExport(cl[i], "init", envir = environment())
-	# }
+	for (i in seq_along(cl)) {
+		init <- model_inits[[i]]
+		parallel::clusterExport(cl[i], "init", envir = environment())
+	}
 
 	# initialize model and first samples
 	c <- 1
@@ -64,7 +55,7 @@ mcmc_parallel <- function(
 			model_constants = model_constants,
 			model_data = model_data,
 			model_code = model_code,
-			init = nimble_inits(model_constants, model_data, buffer = 200),
+			init = init,
 			n_iter = n_iters,
 			custom_samplers = NULL,
 			monitors_add = monitors_add
@@ -167,5 +158,5 @@ mcmc_parallel <- function(
 		if (c == 100) continue <- FALSE
 	}
 
-	if_else(diagnostic$done, TRUE, FALSE)
+	dplyr::if_else(diagnostic$done, TRUE, FALSE)
 }

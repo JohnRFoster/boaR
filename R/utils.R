@@ -83,7 +83,10 @@ create_all_primary_periods <- function(df) {
 	all_pp <- tibble::tibble()
 	message("\nInclude all primary periods")
 
-	pb <- make_pb(1, length(properties))
+	use_pb <- ifelse(length(properties) > 1, TRUE, FALSE)
+	if (use_pb) {
+		pb <- make_pb(1, length(properties))
+	}
 
 	for (i in seq_along(properties)) {
 		pid <- pp_min_max |> dplyr::filter(property == properties[i])
@@ -95,10 +98,12 @@ create_all_primary_periods <- function(df) {
 			timestep = seq_along(p_min:p_max)
 		)
 		all_pp <- dplyr::bind_rows(all_pp, pp)
-		utils::setTxtProgressBar(pb, i)
+		if (use_pb) utils::setTxtProgressBar(pb, i)
 	}
-	close(pb)
-	all_pp |> dplyr::mutate(n_id = seq_len(n()))
+	if (use_pb) {
+		close(pb)
+	}
+	all_pp |> dplyr::mutate(n_id = seq_len(dplyr::n()))
 }
 
 # need to know the total number of timesteps in each property (sampled or not) for indexing
@@ -113,7 +118,7 @@ n_timesteps <- function(df) {
 # used in the process model
 N_lookup_table <- function(df) {
 	df |>
-		dplyr::mutate(n_id = seq_len(n())) |>
+		dplyr::mutate(n_id = seq_len(dplyr::n())) |>
 		dplyr::select(-primary_period) |>
 		tidyr::pivot_wider(names_from = timestep, values_from = n_id) |>
 		dplyr::select(-property) |>
@@ -138,8 +143,12 @@ total_take <- function(df_take, df_pp) {
 		dplyr::summarise(sum_take = sum(take)) |>
 		dplyr::ungroup()
 
-	dplyr::left_join(df_pp, sum_take, by = join_by(property, primary_period)) |>
-		dplyr::mutate(sum_take = if_else(is.na(sum_take), 0, sum_take)) |>
+	dplyr::left_join(
+		df_pp,
+		sum_take,
+		by = dplyr::join_by(property, primary_period)
+	) |>
+		dplyr::mutate(sum_take = dplyr::if_else(is.na(sum_take), 0, sum_take)) |>
 		dplyr::select(-primary_period, -n_id) |>
 		tidyr::pivot_wider(names_from = timestep, values_from = sum_take) |>
 		dplyr::select(-property) |>
@@ -154,7 +163,7 @@ N_lookup_data <- function(df_take, df_pp) {
 
 	df_pp |>
 		dplyr::select(property, primary_period, n_id) |>
-		dplyr::right_join(tH, by = join_by(property, primary_period)) |>
+		dplyr::right_join(tH, by = dplyr::join_by(property, primary_period)) |>
 		dplyr::pull(n_id)
 }
 
@@ -163,7 +172,11 @@ N_lookup_data <- function(df_take, df_pp) {
 create_start_end <- function(df_take, df_pp) {
 	start <- end <- numeric(nrow(df_take))
 
-	df <- dplyr::left_join(df_take, df_pp, by = join_by(primary_period, property))
+	df <- dplyr::left_join(
+		df_take,
+		df_pp,
+		by = dplyr::join_by(primary_period, property)
+	)
 
 	message("Creating start/end indicies")
 
@@ -257,7 +270,7 @@ create_surv_prior <- function(interval) {
 	surv_var_join <- dplyr::left_join(
 		surv_var,
 		surv_sd_calc,
-		by = join_by(unique.ID)
+		by = dplyr::join_by(unique.ID)
 	) |>
 		dplyr::filter(survival.var.type != "SD")
 
@@ -265,7 +278,7 @@ create_surv_prior <- function(interval) {
 		dplyr::select(unique.ID, scale_factor)
 
 	surv_variance <- dplyr::bind_rows(surv_var_join, surv_sd) |>
-		dplyr::left_join(scale_ids, by = join_by(unique.ID)) |>
+		dplyr::left_join(scale_ids, by = dplyr::join_by(unique.ID)) |>
 		dplyr::mutate(
 			variance = sd^2,
 			variance.4week = variance * scale_factor^2,
@@ -294,7 +307,7 @@ create_X <- function(df, cols = c("c_road_den", "c_rugged", "c_canopy")) {
 		as.matrix()
 }
 
-get_prior_hyperparams <- function(post_round, posterior_path = NULL) {
+get_prior_hyperparams <- function(post_round, methods, posterior_path = NULL) {
 	if (post_round == "first") {
 		post <- post_first
 	} else if (post_round == "last") {
@@ -330,7 +343,7 @@ get_prior_hyperparams <- function(post_round, posterior_path = NULL) {
 		shape <- (mu^2) / v
 		rate <- mu / v
 
-		list(
+		post <- list(
 			log_rho_mu = log_rho$mu,
 			log_rho_tau = log_rho$tau,
 			p_mu_mu = p_mu$mu,
@@ -349,15 +362,37 @@ get_prior_hyperparams <- function(post_round, posterior_path = NULL) {
 			log_nu_tau = log_nu$tau
 		)
 	}
+
+	# need to adjust the hyperparameters if we're only using a subset of methods
+	if (length(methods) != 5) {
+		methods <- sort(methods)
+		post$log_rho_mu <- post$log_rho_mu[methods]
+		post$log_rho_tau <- post$log_rho_tau[methods]
+		post$beta1_mu <- post$beta1_mu[methods]
+		post$beta1_tau <- post$beta1_tau[methods]
+
+		# indexes for traps and snares are 1 and 2, wrt to p and gamma
+		if (any(4:5 %in% methods)) {
+			m <- methods - 3
+			post$p_mu_mu <- post$p_mu_mu[m]
+			post$p_mu_tau <- post$p_mu_tau[m]
+			post$log_gamma_mu <- post$log_gamma_mu[m]
+			post$log_gamma_tau <- post$log_gamma_tau[m]
+		}
+
+		beta_p_index <- rep(1:5, each = 3)
+		post$beta_p_mu <- post$beta_p_mu[beta_p_index %in% methods]
+		post$beta_p_tau <- post$beta_p_tau[beta_p_index %in% methods]
+	}
+	post
 }
 
 
 # get max/min for prior for first latent state
 # min = total take in the first primary period (abundance cannot be lower)
 # max = total take assuming observation probability = 0.05
-# if max is greater than a density of 100 pigs/km2 then set to
-# max density of 100
-# prior is on the log scale
+# if max is greater than a density of 30 pigs/km2 then set to
+# max density of 30
 get_n1_prior <- function(df) {
 	df |>
 		dplyr::filter(observed_timestep == 1) |>
@@ -366,7 +401,7 @@ get_n1_prior <- function(df) {
 		dplyr::mutate(
 			min_n = total_take + 5, # add a small buffer to allow for some unobserved pigs
 			abundance_min = min_n,
-			abundance_max = round(property_area_km2 * 100) + min_n
+			abundance_max = round(property_area_km2 * 30) + min_n
 		)
 }
 
@@ -459,7 +494,7 @@ create_primary_periods <- function(df, interval, create_new = FALSE) {
 		end_dates <- c(start_dates[-1] - 1, max_date)
 
 		primary_periods <- tibble::tibble(start_dates, end_dates) |>
-			mutate(timestep = seq_len(n()))
+			mutate(timestep = seq_len(dplyr::n()))
 		primary_periods$month <- month(timestep_df$end_dates)
 		primary_periods$year <- year(timestep_df$end_dates)
 	} else {
@@ -508,7 +543,7 @@ resolve_duplicate <- function(insitu_data) {
 	insitu_data |>
 		dplyr::left_join(
 			property_areas,
-			by = join_by(propertyID, property_area_km2)
+			by = dplyr::join_by(propertyID, property_area_km2)
 		) |>
 		dplyr::filter(
 			!is.na(property_area_km2),
@@ -523,7 +558,7 @@ dynamic_filter <- function(df) {
 	good_events <- df |>
 		dplyr::select(propertyID, timestep) |>
 		dplyr::group_by(propertyID, timestep) |>
-		dplyr::mutate(two_plus_takes = n() >= 2) |>
+		dplyr::mutate(two_plus_takes = dplyr::n() >= 2) |>
 		dplyr::filter(two_plus_takes) |>
 		dplyr::group_by(propertyID) |>
 		dplyr::arrange(propertyID, timestep) |>
@@ -605,11 +640,11 @@ order_of_events <- function(order_df) {
 			order = order(jittered_midpoint),
 			has_multi = any(order > 1),
 			any_ties = any(duplicated(jittered_midpoint)),
-			n_survey = n()
+			n_survey = dplyr::n()
 		) |>
 		dplyr::ungroup() |>
 		dplyr::arrange(propertyID, timestep, order) |>
-		dplyr::mutate(p = seq_len(n()))
+		dplyr::mutate(p = seq_len(dplyr::n()))
 
 	testthat::expect_all_true(df$has_multi)
 	testthat::expect_all_true(!df$any_ties)
@@ -710,7 +745,9 @@ create_timestep_df <- function(df) {
 		unique() |>
 		dplyr::arrange(propertyID, primary_period) |>
 		dplyr::group_by(propertyID) |>
-		dplyr::mutate(observed_timestep = seq_len(n())) |> # timestep is the sequence of primary periods within a property
+		dplyr::mutate(
+			observed_timestep = seq_len(dplyr::n())
+		) |> # timestep is the sequence of primary periods within a property
 		dplyr::ungroup() |>
 		dplyr::mutate(primary_period = primary_period - min(primary_period) + 1)
 }
@@ -747,7 +784,7 @@ collate_mcmc_chunks <- function(dest, start = 1) {
 	}
 
 	if (length(mcmc_dirs) >= 2) {
-		use_pb <- if_else(length(mcmc_dirs) == 2, FALSE, TRUE)
+		use_pb <- dplyr::if_else(length(mcmc_dirs) == 2, FALSE, TRUE)
 		if (use_pb) {
 			pb <- make_pb(2, length(mcmc_dirs))
 		}
@@ -796,6 +833,19 @@ collate_mcmc_chunks <- function(dest, start = 1) {
 	return(list(params = params, states = states))
 }
 
+method_factors <- function(df) {
+	df |>
+		dplyr::mutate(
+			method_fac = dplyr::case_when(
+				method == "FIREARMS" ~ 1,
+				method == "FIXED WING" ~ 2,
+				method == "HELICOPTER" ~ 3,
+				method == "SNARE" ~ 4,
+				method == "TRAPS" ~ 5
+			)
+		) |>
+		dplyr::pull(method_fac)
+}
 
 .onLoad <- function(libname, pkgname) {
 	# get the existing options

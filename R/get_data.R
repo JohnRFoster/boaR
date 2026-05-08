@@ -10,19 +10,19 @@ get_data <- function(file, interval, create_new) {
 	all_take <- readr::read_csv(file, show_col_types = FALSE) |>
 		dplyr::filter(start.date >= lubridate::ymd("2014-01-01")) |>
 		dplyr::mutate(
-			cnty_name = if_else(
+			cnty_name = dplyr::if_else(
 				grepl("ST ", cnty_name),
 				gsub("ST ", "ST. ", cnty_name),
 				cnty_name
 			),
-			cnty_name = if_else(grepl("KERN", cnty_name), "KERN", cnty_name)
+			cnty_name = dplyr::if_else(grepl("KERN", cnty_name), "KERN", cnty_name)
 		)
 
 	data_mis <- all_take |>
 		dplyr::mutate(property_area_km2 = round(property.size * 0.00404686, 2)) |>
 		dplyr::filter(property_area_km2 >= 1.8, st_name != "HAWAII") |>
 		dplyr::mutate(
-			effort = if_else(
+			effort = dplyr::if_else(
 				cmp_name %in% c("TRAPS, CAGE", "SNARE"),
 				cmp.days,
 				cmp.hours
@@ -57,7 +57,7 @@ get_data <- function(file, interval, create_new) {
 	data_mis <- dplyr::left_join(
 		data_timestep,
 		timestep_df,
-		by = join_by(propertyID, primary_period)
+		by = dplyr::join_by(propertyID, primary_period)
 	) |>
 		dplyr::mutate(primary_period = primary_period - min(primary_period) + 1)
 
@@ -66,7 +66,11 @@ get_data <- function(file, interval, create_new) {
 	data_obs <- get_obs_covars(land_csv)
 
 	## join MIS with observation covariates ----
-	data_join <- dplyr::left_join(data_mis, data_obs, by = join_by(county_code))
+	data_join <- dplyr::left_join(
+		data_mis,
+		data_obs,
+		by = dplyr::join_by(county_code)
+	)
 	data_join |>
 		dplyr::filter(!is.na(c_road_den)) |>
 		create_ids()

@@ -35,7 +35,16 @@ mcmc_parallel <- function(
 		"n_iters",
 		"custom_samplers",
 		"monitors_add",
-		"params_check"
+		"params_check",
+		"collate_mcmc_chunks",
+		"continue_mcmc",
+		"write_abundance",
+		"write_out_p",
+		"subset_N_unobserved",
+		"subset_N_observed",
+		"subset_params",
+		"subset_mcmc",
+		"continue_sampling"
 	)
 
 	if (!is.null(export)) {

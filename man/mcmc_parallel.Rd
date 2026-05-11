@@ -14,7 +14,8 @@ mcmc_parallel(
   n_iters,
   dest,
   monitors_add = NULL,
-  custom_samplers = NULL
+  custom_samplers = NULL,
+  export = NULL
 )
 }
 \arguments{

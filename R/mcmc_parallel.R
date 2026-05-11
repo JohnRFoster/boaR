@@ -25,9 +25,10 @@ mcmc_parallel <- function(
 	n_iters,
 	dest,
 	monitors_add = NULL,
-	custom_samplers = NULL
+	custom_samplers = NULL,
+	export = NULL # start here
 ) {
-	export <- c(
+	export_default <- c(
 		"model_data",
 		"model_constants",
 		"model_code",
@@ -37,7 +38,11 @@ mcmc_parallel <- function(
 		"params_check"
 	)
 
-	parallel::clusterExport(cl, export, envir = environment())
+	if (!is.null(export)) {
+		export_default <- c(export_default, export)
+	}
+
+	parallel::clusterExport(cl, export_default, envir = environment())
 	parallel::clusterEvalQ(cl, {
 		library(boaR)
 	})

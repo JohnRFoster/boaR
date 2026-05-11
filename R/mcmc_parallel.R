@@ -30,6 +30,7 @@ mcmc_parallel <- function(
 	export <- c(
 		"model_data",
 		"model_constants",
+		"model_code",
 		"n_iters",
 		"custom_samplers",
 		"monitors_add",

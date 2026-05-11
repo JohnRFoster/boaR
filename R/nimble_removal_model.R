@@ -194,7 +194,7 @@ nimble_removal_model <- function() {
 
     # the probability an individual is captured after the first survey
     for (i in 1:n_not_first_survey) {
-      log(p[not_first_survey[i]]) <- log_theta[start[not_first_survey[i]]] +
+      log(p[not_first_survey[i]]) <- log_theta[not_first_survey[i]] +
         sum(log(
           1 -
             exp(log_theta[start[not_first_survey[i]]:end[not_first_survey[i]]])
@@ -202,8 +202,8 @@ nimble_removal_model <- function() {
     }
 
     if (single_property) {
-      N[nH[1, 1]] ~ dunif(n1_min, n1_max)
-      # N[nH[1, 1]] ~ dpois(round(lambda_1))
+      lambda_1 ~ dunif(n1_min, n1_max)
+      N[nH[1, 1]] ~ dpois(round(lambda_1))
 
       # population growth across time steps
       for (j in 2:n_time_prop) {
@@ -219,8 +219,8 @@ nimble_removal_model <- function() {
       }
     } else {
       for (i in 1:n_property) {
-        N[nH[i, 1]] ~ dunif(n1_min[i], n1_max[i])
-        # N[nH[i, 1]] ~ dpois(round(lambda_1[i]))
+        lambda_1[i] ~ dunif(n1_min[i], n1_max[i])
+        N[nH[i, 1]] ~ dpois(round(lambda_1[i]))
 
         # population growth across time steps
         for (j in 2:n_time_prop[i]) {
@@ -275,6 +275,48 @@ calc_log_potential_area <- nimble::nimbleFunction(
             log_effort_per -
             log(exp(log_gamma[ts_id]) + effort_per))) +
         log(1 + (p_unique[ts_id] * n_trap_m1))
+    }
+    return(log_potential_area)
+    returnType(double(0))
+  },
+  buildDerivs = TRUE
+)
+
+#' Calculate the log of the potential area surveyed (deprecated)
+#' @param log_rho vector of log rho coefficients (scaling effort to area) for each method
+#' @param log_gamma vector of log gamma coefficients (saturating effect) for traps and snares
+#' @param p_unique vector of probabilities that a trap captures a unique individual for traps and snares
+#' @param log_effort_per scalar of log effort per survey
+#' @param effort_per scalar of effort per survey
+#' @param n_trap_m1 scalar of number of traps minus 1 for each survey
+#' @param log_pi log of pi
+#' @param method method index for each survey
+#' @return log of the potential area surveyed
+#' @export
+calc_log_area <- nimbleFunction(
+  run = function(
+    log_rho = double(1),
+    log_gamma = double(1),
+    p_unique = double(1),
+    log_effort_per = double(0),
+    effort_per = double(0),
+    n_trap_m1 = double(0),
+    log_pi = double(0),
+    method = double(0)
+  ) {
+    m <- method
+
+    if (m <= 3) {
+      # firearms, fixed wing, and helicopter
+      log_potential_area <- log_rho[m] + log_effort_per
+    } else {
+      # traps and snares
+      log_potential_area <- log_pi +
+        (2 *
+          (log_rho[m] +
+            log_effort_per -
+            log(exp(log_gamma[m - 3]) + effort_per))) +
+        log(1 + (p_unique[m - 3] * n_trap_m1))
     }
     return(log_potential_area)
     returnType(double(0))

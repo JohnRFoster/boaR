@@ -293,7 +293,7 @@ calc_log_potential_area <- nimble::nimbleFunction(
 #' @param method method index for each survey
 #' @return log of the potential area surveyed
 #' @export
-calc_log_area <- nimbleFunction(
+calc_log_area <- nimble::nimbleFunction(
   run = function(
     log_rho = double(1),
     log_gamma = double(1),

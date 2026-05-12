@@ -115,9 +115,8 @@ mcmc_parallel <- function(
 	write_out_p(params, diagnostic, path)
 
 	converged <- all(diagnostic$psrf[, 2] < 1.1)
-	if (converged) {
-		write_abundance(N_observed, N_unobserved, path)
-	}
+
+	write_abundance(N_observed, N_unobserved, path)
 
 	continue <- !diagnostic$done
 	write_N <- FALSE
@@ -163,9 +162,7 @@ mcmc_parallel <- function(
 		converged <- all(diagnostic$psrf[, 2] < 1.1)
 		write_N <- dplyr::if_else(converged, TRUE, FALSE)
 
-		if (converged || write_N) {
-			write_abundance(N_observed, N_unobserved, path)
-		}
+		write_abundance(N_observed, N_unobserved, path)
 
 		continue <- !diagnostic$done
 		message("=================================================")

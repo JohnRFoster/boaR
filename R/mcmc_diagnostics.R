@@ -73,8 +73,7 @@ mcmc_diagnostics <- function(
 	draws <- sample.int(nrow(posterior_burnin), n_mcmc, replace = TRUE)
 	posterior_samples <- posterior_burnin |>
 		tibble::as_tibble() |>
-		dplyr::slice(draws) |>
-		dplyr::mutate(np = config$np)
+		dplyr::slice(draws)
 
 	readr::write_rds(
 		posterior_samples,
@@ -90,8 +89,7 @@ mcmc_diagnostics <- function(
 
 	state_samples <- posterior_burnin2 |>
 		tibble::as_tibble() |>
-		dplyr::slice(draws) |>
-		dplyr::mutate(np = config$np)
+		dplyr::slice(draws)
 
 	readr::write_rds(state_samples, file.path(dest, "stateSamples.rds"))
 

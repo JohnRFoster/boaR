@@ -3,7 +3,15 @@
 #' samples and then calculating diagnostics on the collated samples.
 #'
 #'@description Calculate MCMC diagnostics for a nimble model
-
+#' @param mcmc_dir directory where MCMC chunks are stored
+#' @param dest directory where diagnostics and posterior samples will be saved
+#' @param params_check vector of parameters (nodes) to assess convergence
+#' @param n_mcmc number random posterior samples to save after burnin
+#' @param effective_size minimum effective sample size for each parameter
+#' @param max_psrf maximum potential scale reduction factor (PSRF) to assess if mcmc is behaving well.
+#' @param verbose print diagnostic messages to the console
+#' @param make_traceplot make traceplots for the parameters in params_check
+#' @export
 mcmc_diagnostics <- function(
 	mcmc_dir,
 	dest,

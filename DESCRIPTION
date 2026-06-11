@@ -7,11 +7,11 @@ Description: Predicts wild pig abundance using a removal model.
 License: GPL (>= 3)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.3
 Imports: 
     cli,
     coda,
     dplyr,
+    ggplot2,
     glue,
     lifecycle,
     lubridate,
@@ -26,3 +26,4 @@ Imports:
 Depends: 
     R (>= 3.5),
     nimble (>= 1.4.2)
+Config/roxygen2/version: 8.0.0

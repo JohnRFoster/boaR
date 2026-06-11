@@ -868,3 +868,130 @@ method_factors <- function(df) {
 make_pb <- function(min, max, style = getOption("pbStyle", 3)) {
 	utils::txtProgressBar(min = min, max = max, style = style)
 }
+
+# function to create traceplots from thinned posterior
+gg_trace_plot <- function(post, nodes_2_plot, thin = 5000) {
+	df <- post |>
+		dplyr::select(chain, all_of(nodes_2_plot)) |>
+		dplyr::group_by(chain) |>
+		dplyr::mutate(iteration = 1:n()) |>
+		dplyr::ungroup()
+
+	posterior_mat <- df |>
+		dplyr::select(-chain, -iteration) |>
+		as.matrix()
+
+	print(apply(posterior_mat, 2, quantile, c(0.025, 0.5, 0.975)))
+
+	total_iterations <- max(df$iteration)
+	thin_interval <- floor(seq(1, total_iterations, length.out = thin))
+
+	df |>
+		dplyr::filter(iteration %in% thin_interval) |>
+		tidyr::pivot_longer(cols = -c(iteration, chain), names_to = "node") |>
+		dplyr::mutate(chain = as.character(chain)) |>
+		ggplot2::ggplot() +
+		ggplot2::aes(x = iteration, y = value, color = chain) +
+		ggplot2::geom_line() +
+		ggplot2::facet_wrap(~node, scales = "free_y") +
+		ggplot2::labs(x = "Iteration", y = "Value") +
+		ggplot2::theme_bw()
+}
+
+# function to create traceplots from thinned posterior
+trace_plot <- function(
+	params_mcmc_list,
+	nodes_2_plot,
+	n_chains,
+	dest,
+	thin = 5000
+) {
+	posterior <- tibble()
+	message("Create posterior tibble...")
+	pb <- make_pb(min = 1, max = n_chains)
+	for (i in seq_len(n_chains)) {
+		chain_i <- as.matrix(params_mcmc_list[[i]]) |>
+			as_tibble() |>
+			mutate(chain = i)
+		posterior <- dplyr::bind_rows(posterior, chain_i)
+
+		utils::setTxtProgressBar(pb, i)
+	}
+	close(pb)
+	message("  done")
+
+	nodes <- setdiff(colnames(posterior), "chain")
+	n_plots_per_page <- 4 # want to put 4 nodes on a single plot
+	idx <- rep(
+		seq(1, ceiling(length(nodes) / n_plots_per_page), by = 1),
+		each = n_plots_per_page
+	)[1:length(nodes)]
+
+	plots <- tibble::tibble(
+		nodes = nodes,
+		idx = idx
+	)
+
+	message("Creating traceplots...")
+	# options(bitmapType = 'Xlib')
+	pb <- make_pb(min = 1, max = max(plots$idx))
+	for (i in seq_along(unique(plots$idx))) {
+		n2p <- plots |>
+			filter(idx == i) |>
+			dplyr::pull(nodes)
+
+		gg <- gg_trace_plot(posterior, n2p)
+
+		filename <- file.path(
+			dest,
+			paste0("mcmcTimeseries_", sprintf("%03d", i), ".pdf")
+		)
+		ggplot2::ggsave(filename, gg)
+
+		utils::setTxtProgressBar(pb, i)
+	}
+	close(pb)
+}
+
+density_stats <- function(mcmc_list, data) {
+	mcmc_matrix <- as.matrix(mcmc_list)
+	draws <- sample.int(nrow(mcmc_matrix), 5000, replace = TRUE)
+	abundance_sample <- mcmc_matrix[draws, ] |>
+		as_tibble() |>
+		pivot_longer(cols = everything(), names_to = "node", values_to = "value") |>
+		mutate(n_id = as.numeric(stringr::str_extract(node, "(?<=\\[)\\d*(?=\\])")))
+
+	all_pp <- create_all_primary_periods(data) |>
+		select(-timestep)
+
+	property_info <- data |>
+		select(agrp_prp_id, property, primary_period, property_area_km2) |>
+		left_join(all_pp) |>
+		distinct()
+
+	property_match <- left_join(abundance_sample, property_info) |>
+		mutate(density = value / property_area_km2) |>
+		group_by(
+			node,
+			n_id,
+			agrp_prp_id,
+			property,
+			primary_period,
+			property_area_km2
+		) |>
+		summarise(
+			mean = mean(density),
+			variance = var(density),
+			`0.025` = quantile(density, 0.025),
+			`0.05` = quantile(density, 0.05),
+			`0.1` = quantile(density, 0.1),
+			`0.25` = quantile(density, 0.25),
+			`0.5` = quantile(density, 0.5),
+			`0.75` = quantile(density, 0.75),
+			`0.9` = quantile(density, 0.9),
+			`0.95` = quantile(density, 0.95),
+			`0.975` = quantile(density, 0.975)
+		) |>
+		ungroup()
+	return(property_match)
+}

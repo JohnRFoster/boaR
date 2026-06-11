@@ -95,7 +95,7 @@ mcmc_diagnostics <- function(
 
 	if (make_traceplot) {
 		message("\n==== Making traceplots ====")
-		traceplot(
+		trace_plot(
 			params_mcmc_list = params_mcmc_list,
 			nodes_2_plot = params_check,
 			n_chains = n_chains,

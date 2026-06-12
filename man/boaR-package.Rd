@@ -11,5 +11,10 @@ Predicts wild pig abundance using a removal model.
 \author{
 \strong{Maintainer}: John Foster \email{john.foster@usda.gov}
 
+Authors:
+\itemize{
+  \item John Foster \email{john.foster@usda.gov}
+}
+
 }
 \keyword{internal}

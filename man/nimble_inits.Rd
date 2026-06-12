@@ -4,7 +4,19 @@
 \alias{nimble_inits}
 \title{Prepare initial values for nimble model}
 \usage{
-nimble_inits(constants_nimble, data_nimble, buffer = 1000)
+nimble_inits(
+  constants_nimble,
+  data_nimble,
+  buffer = 1000,
+  beta1 = NULL,
+  beta_p = NULL,
+  p_mu = NULL,
+  log_gamma = NULL,
+  log_rho = NULL,
+  psi_phi = NULL,
+  phi_mu = NULL,
+  log_nu = NULL
+)
 }
 \arguments{
 \item{constants_nimble}{A list of constants for the nimble model.}
@@ -12,6 +24,22 @@ nimble_inits(constants_nimble, data_nimble, buffer = 1000)
 \item{data_nimble}{A list of data for the nimble model.}
 
 \item{buffer}{A numeric value to add to the initial values of N and lambda_1 to ensure they comply with take values.}
+
+\item{beta1}{vector for initial values of beta1. If NULL (default) uses prior distribution parameters specfied in constants_nimble.}
+
+\item{p_mu}{vector for initial values of p_mu. If NULL (default) uses prior distribution parameters specfied in constants_nimble.}
+
+\item{log_gamma}{vector for initial values of log_gamma. If NULL (default) uses prior distribution parameters specfied in constants_nimble.}
+
+\item{log_rho}{vector for initial values of log_rho. If NULL (default) uses prior distribution parameters specfied in constants_nimble.}
+
+\item{psi_phi}{range vector (min, max) for the bounds of the initial value for psi_phi. A random value will be drawn between this range. If NULL (default) uses prior distribution parameters specfied in constants_nimble.}
+
+\item{phi_mu}{range vector (min, max) for the bounds of the initial value for phi_mu. A random value will be drawn between this range. If NULL (default) uses prior distribution parameters specfied in constants_nimble.}
+
+\item{log_nu}{range vector (min, max) for the bounds of the initial value for log_nu. A random value will be drawn between this range. If NULL (default) uses prior distribution parameters specfied in constants_nimble.}
+
+\item{betap}{vector for initial values of beta_p. This matrix is specified by row. If NULL (default) uses prior distribution parameters specfied in constants_nimble.}
 }
 \value{
 A list of initial values for the nimble model. Works for one chain.

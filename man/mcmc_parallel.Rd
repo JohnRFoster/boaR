@@ -9,13 +9,13 @@ mcmc_parallel(
   model_code,
   model_constants,
   model_data,
-  model_inits,
   params_check,
   n_iters,
   dest,
   monitors_add = NULL,
   custom_samplers = NULL,
-  export = NULL
+  export = NULL,
+  ...
 )
 }
 \arguments{
@@ -27,8 +27,6 @@ mcmc_parallel(
 
 \item{model_data}{model data, as a list}
 
-\item{model_inits}{initial model values, as a list, one list element for each chain}
-
 \item{params_check}{vector of parameters (nodes) to assess convergence}
 
 \item{n_iters}{the number of iterations to run in each chunk after the model has compiled}
@@ -38,6 +36,8 @@ mcmc_parallel(
 \item{monitors_add}{vector of nodes to monitor in addition to default nodes}
 
 \item{custom_samplers}{data frame of mcmc config. Nodes in one column, sampler types in another}
+
+\item{model_inits}{initial model values, as a list, one list element for each chain}
 }
 \description{
 Run nimble on specified cluster, check for convergence and save samples periodically

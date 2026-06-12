@@ -20,13 +20,13 @@ mcmc_parallel <- function(
 	model_code,
 	model_constants,
 	model_data,
-	model_inits,
 	params_check,
 	n_iters,
 	dest,
 	monitors_add = NULL,
 	custom_samplers = NULL,
-	export = NULL # start here
+	export = NULL,
+	...
 ) {
 	export_default <- c(
 		"model_data",
@@ -57,7 +57,21 @@ mcmc_parallel <- function(
 	})
 
 	for (i in seq_along(cl)) {
-		init <- model_inits[[i]]
+		set.seed(i)
+
+		init <- nimble_inits(
+			constants_nimble = model_constants,
+			data_nimble = model_data,
+			buffer = 200,
+			beta1 = beta1,
+			beta_p = beta_p,
+			p_mu = p_mu,
+			log_gamma = log_gamma,
+			log_rho = log_rho,
+			psi_phi = psi_phi,
+			phi_mu = phi_mu,
+			log_nu = log_nu
+		)
 		parallel::clusterExport(cl[i], "init", envir = environment())
 	}
 

@@ -63,14 +63,7 @@ mcmc_parallel <- function(
 			constants_nimble = model_constants,
 			data_nimble = model_data,
 			buffer = 200,
-			beta1 = beta1,
-			beta_p = beta_p,
-			p_mu = p_mu,
-			log_gamma = log_gamma,
-			log_rho = log_rho,
-			psi_phi = psi_phi,
-			phi_mu = phi_mu,
-			log_nu = log_nu
+			...
 		)
 		parallel::clusterExport(cl[i], "init", envir = environment())
 	}

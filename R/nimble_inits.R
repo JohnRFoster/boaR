@@ -32,7 +32,7 @@ nimble_inits <- function(
 		} else {
 			beta1 <- rnorm(length(beta1), beta1, 0.25)
 		}
-		s
+
 		if (is.null(beta_p)) {
 			beta_p <- matrix(
 				rnorm(n_betaP, beta_p_mu, sqrt(1 / beta_p_tau)),

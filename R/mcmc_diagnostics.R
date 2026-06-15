@@ -106,6 +106,6 @@ mcmc_diagnostics <- function(
 		)
 	}
 
-	density <- density_stats(state_samples, model_data)
+	density <- density_stats(state_samples, data)
 	write_rds(density, file.path(dest, "densitySummaries.rds"))
 }

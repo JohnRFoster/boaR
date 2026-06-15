@@ -5,6 +5,7 @@
 #'@description Calculate MCMC diagnostics for a nimble model
 #' @param mcmc_dir directory where MCMC chunks are stored
 #' @param dest directory where diagnostics and posterior samples will be saved
+#' @param data input data frame used for nimble fit
 #' @param params_check vector of parameters (nodes) to assess convergence
 #' @param n_mcmc number random posterior samples to save after burnin
 #' @param effective_size minimum effective sample size for each parameter
@@ -12,9 +13,11 @@
 #' @param verbose print diagnostic messages to the console
 #' @param make_traceplot make traceplots for the parameters in params_check
 #' @export
+
 mcmc_diagnostics <- function(
 	mcmc_dir,
 	dest,
+	data,
 	params_check,
 	n_mcmc = 5000,
 	effective_size = 1000,
@@ -102,4 +105,7 @@ mcmc_diagnostics <- function(
 			dest = dest
 		)
 	}
+
+	density <- density_stats(state_samples, model_data)
+	write_rds(density, file.path(dest, "densitySummaries.rds"))
 }

@@ -953,11 +953,8 @@ trace_plot <- function(
 	close(pb)
 }
 
-density_stats <- function(mcmc_list, data) {
-	mcmc_matrix <- as.matrix(mcmc_list)
-	draws <- sample.int(nrow(mcmc_matrix), 5000, replace = TRUE)
-	abundance_sample <- mcmc_matrix[draws, ] |>
-		as_tibble() |>
+density_stats <- function(state_df, data) {
+	abundance_sample <- state_df |>
 		pivot_longer(cols = everything(), names_to = "node", values_to = "value") |>
 		mutate(n_id = as.numeric(stringr::str_extract(node, "(?<=\\[)\\d*(?=\\])")))
 
@@ -969,7 +966,7 @@ density_stats <- function(mcmc_list, data) {
 		left_join(all_pp) |>
 		distinct()
 
-	property_match <- left_join(abundance_sample, property_info) |>
+	left_join(abundance_sample, property_info) |>
 		mutate(density = value / property_area_km2) |>
 		group_by(
 			node,
@@ -993,5 +990,4 @@ density_stats <- function(mcmc_list, data) {
 			`0.975` = quantile(density, 0.975)
 		) |>
 		ungroup()
-	return(property_match)
 }

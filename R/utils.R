@@ -874,7 +874,7 @@ gg_trace_plot <- function(post, nodes_2_plot, thin = 5000) {
 	df <- post |>
 		dplyr::select(chain, all_of(nodes_2_plot)) |>
 		dplyr::group_by(chain) |>
-		dplyr::mutate(iteration = 1:n()) |>
+		dplyr::mutate(iteration = seq_len(n())) |>
 		dplyr::ungroup()
 
 	posterior_mat <- df |>
@@ -925,7 +925,7 @@ trace_plot <- function(
 	idx <- rep(
 		seq(1, ceiling(length(nodes) / n_plots_per_page), by = 1),
 		each = n_plots_per_page
-	)[1:length(nodes)]
+	)[seq_along(nodes)]
 
 	plots <- tibble::tibble(
 		nodes = nodes,

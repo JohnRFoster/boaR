@@ -309,9 +309,7 @@ create_X <- function(df, cols = c("c_road_den", "c_rugged", "c_canopy")) {
 
 get_prior_hyperparams <- function(post_round, methods, posterior_path = NULL) {
 	if (post_round == "first") {
-		post <- post_first
-	} else if (post_round == "last") {
-		post <- post_last
+		post <- hyperparams
 	} else if (post_round == "create_new") {
 		post <- read_rds(posterior_path)
 

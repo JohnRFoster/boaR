@@ -2,7 +2,6 @@
 #'
 #'@description Run nimble on specified cluster, check for convergence and save samples periodically
 #'@param cl Cluster made using the parallel package
-#'@param model_code the nimble model code
 #'@param model_constants model constants, as a list
 #'@param model_data model data, as a list
 #'@param model_inits initial model values, as a list, one list element for each chain
@@ -17,7 +16,6 @@
 
 mcmc_parallel <- function(
 	cl,
-	model_code,
 	model_constants,
 	model_data,
 	params_check,
@@ -31,7 +29,6 @@ mcmc_parallel <- function(
 	export_default <- c(
 		"model_data",
 		"model_constants",
-		"model_code",
 		"n_iters",
 		"custom_samplers",
 		"monitors_add",
@@ -76,7 +73,6 @@ mcmc_parallel <- function(
 		single_mcmc_chain(
 			model_constants = model_constants,
 			model_data = model_data,
-			model_code = model_code,
 			init = init,
 			n_iter = n_iters,
 			custom_samplers = NULL,

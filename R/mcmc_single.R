@@ -2,7 +2,6 @@
 #'
 #' @param model_constants A list of constants for the nimble model.
 #' @param model_data A list of data for the nimble model.
-#' @param model_code The nimble model code.
 #' @param init A list of initial values for the nimble model.
 #' @param n_iter The number of MCMC iterations to run.
 #' @param custom_samplers A data frame specifying custom samplers to use. Should have columns "node" and "type".
@@ -14,7 +13,6 @@
 single_mcmc_chain <- function(
   model_constants,
   model_data,
-  model_code,
   init,
   n_iter,
   custom_samplers = NULL,
@@ -30,7 +28,7 @@ single_mcmc_chain <- function(
   use_traps_or_snares <- model_flags$use_traps_or_snares
 
   Rmodel <- nimble::nimbleModel(
-    code = model_code,
+    code = nimble_removal_model(),
     constants = model_constants,
     data = model_data,
     inits = init,

@@ -372,6 +372,7 @@ get_prior_hyperparams <- function(post_round, methods, posterior_path = NULL) {
 		# indexes for traps and snares are 1 and 2, wrt to p and gamma
 		if (any(4:5 %in% methods)) {
 			m <- methods - 3
+			m <- m[m > 0]
 			post$p_mu_mu <- post$p_mu_mu[m]
 			post$p_mu_tau <- post$p_mu_tau[m]
 			post$log_gamma_mu <- post$log_gamma_mu[m]

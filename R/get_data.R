@@ -72,7 +72,6 @@ get_data <- function(file, interval, create_new) {
 		by = dplyr::join_by(county_code)
 	)
 	data_join |>
-		dplyr::filter(!is.na(c_road_den)) |>
 		create_ids()
 }
 

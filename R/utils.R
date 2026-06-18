@@ -990,17 +990,3 @@ density_stats <- function(state_df, data) {
 		) |>
 		ungroup()
 }
-
-get_model_flags <- function(constants) {
-	out <- list()
-	out$single_property <- constants$n_property == 1
-	out$single_method <- constants$n_method == 1
-	out$use_shooting <- any(constants$shooting == 1)
-
-	use_snares <- any(constants$method == 4)
-	use_traps <- any(constants$method == 5)
-	out$use_traps_and_snares <- use_traps & use_snares
-	out$use_traps_or_snares <- use_traps + use_snares == 1
-
-	out
-}

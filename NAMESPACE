@@ -3,6 +3,7 @@
 export(calc_log_area)
 export(calc_log_potential_area)
 export(get_data)
+export(get_model_flags)
 export(mcmc_diagnostics)
 export(mcmc_parallel)
 export(nimble_constants)

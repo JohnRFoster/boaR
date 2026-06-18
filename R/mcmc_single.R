@@ -20,6 +20,15 @@ single_mcmc_chain <- function(
   custom_samplers = NULL,
   monitors_add = NULL
 ) {
+  # these booleans need to be defined to build the correct model
+  model_flags <- get_model_flags(constants)
+
+  single_property <- model_flags$single_property
+  single_method <- model_flags$single_method
+  use_shooting <- model_flags$use_shooting
+  use_traps_and_snares <- model_flags$use_traps_and_snares
+  use_traps_or_snares <- model_flags$use_traps_or_snares
+
   Rmodel <- nimble::nimbleModel(
     code = model_code,
     constants = model_constants,

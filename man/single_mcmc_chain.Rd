@@ -7,7 +7,6 @@
 single_mcmc_chain(
   model_constants,
   model_data,
-  model_code,
   init,
   n_iter,
   custom_samplers = NULL,
@@ -18,8 +17,6 @@ single_mcmc_chain(
 \item{model_constants}{A list of constants for the nimble model.}
 
 \item{model_data}{A list of data for the nimble model.}
-
-\item{model_code}{The nimble model code.}
 
 \item{init}{A list of initial values for the nimble model.}
 

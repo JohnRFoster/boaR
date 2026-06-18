@@ -6,7 +6,6 @@
 \usage{
 mcmc_parallel(
   cl,
-  model_code,
   model_constants,
   model_data,
   params_check,
@@ -20,8 +19,6 @@ mcmc_parallel(
 }
 \arguments{
 \item{cl}{Cluster made using the parallel package}
-
-\item{model_code}{the nimble model code}
 
 \item{model_constants}{model constants, as a list}
 

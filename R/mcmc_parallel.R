@@ -37,6 +37,7 @@ mcmc_parallel <- function(
 		"continue_mcmc",
 		"nimble_inits",
 		"get_model_flags",
+		"nimble_removal_model",
 		"write_abundance",
 		"write_out_p",
 		"subset_N_unobserved",

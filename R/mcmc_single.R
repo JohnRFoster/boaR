@@ -19,7 +19,7 @@ single_mcmc_chain <- function(
   monitors_add = NULL
 ) {
   # these booleans need to be defined to build the correct model
-  model_flags <- boaR::get_model_flags(model_constants)
+  model_flags <- get_model_flags(model_constants)
 
   single_property <- model_flags$single_property
   single_method <- model_flags$single_method
@@ -27,9 +27,8 @@ single_mcmc_chain <- function(
   use_traps_and_snares <- model_flags$use_traps_and_snares
   use_traps_or_snares <- model_flags$use_traps_or_snares
 
-  model_code <- nimble_removal_model()
   Rmodel <- nimble::nimbleModel(
-    code = model_code,
+    code = nimble_removal_model(),
     constants = model_constants,
     data = model_data,
     inits = init,

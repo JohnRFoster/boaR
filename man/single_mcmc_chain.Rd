@@ -7,6 +7,7 @@
 single_mcmc_chain(
   model_constants,
   model_data,
+  model_flags,
   init,
   n_iter,
   custom_samplers = NULL,

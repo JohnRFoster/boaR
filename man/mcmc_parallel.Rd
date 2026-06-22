@@ -8,6 +8,7 @@ mcmc_parallel(
   cl,
   model_constants,
   model_data,
+  model_flags,
   params_check,
   n_iters,
   dest,

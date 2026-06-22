@@ -4,7 +4,7 @@
 \alias{get_data}
 \title{Read MIS data, filter, and create primary periods}
 \usage{
-get_data(file, interval, create_new)
+get_data(file, interval, create_new, start_date = "2014-01-01")
 }
 \arguments{
 \item{file}{The file path to the raw data CSV.}
@@ -12,6 +12,8 @@ get_data(file, interval, create_new)
 \item{interval}{The number of days in each primary period.}
 
 \item{create_new}{Whether to create new primary periods or use existing ones (from calibration).}
+
+\item{start_date}{Custom start date cutoff, default is 2014-01-01}
 }
 \description{
 Read MIS data, filter, and create primary periods

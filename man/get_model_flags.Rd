@@ -4,7 +4,7 @@
 \alias{get_model_flags}
 \title{Create boolean values to build the correct model}
 \usage{
-get_model_flags(constants)
+get_model_flags(df)
 }
 \arguments{
 \item{constants}{The constants list the is used to build a nimble model.}

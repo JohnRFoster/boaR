@@ -2,7 +2,7 @@
 #' @param file The file path to the raw data CSV.
 #' @param interval The number of days in each primary period.
 #' @param create_new Whether to create new primary periods or use existing ones (from calibration).
-#'
+#' @param start_date Custom start date cutoff, default is 2014-01-01
 #'
 #' @export
 

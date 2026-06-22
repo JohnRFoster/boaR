@@ -13,14 +13,13 @@
 single_mcmc_chain <- function(
   model_constants,
   model_data,
+  model_flags,
   init,
   n_iter,
   custom_samplers = NULL,
   monitors_add = NULL
 ) {
   # these booleans need to be defined to build the correct model
-  model_flags <- get_model_flags(model_constants)
-
   single_property <- model_flags$single_property
   single_method <- model_flags$single_method
   use_shooting <- model_flags$use_shooting

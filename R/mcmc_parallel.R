@@ -35,6 +35,8 @@ mcmc_parallel <- function(
 		"params_check",
 		"collate_mcmc_chunks",
 		"continue_mcmc",
+		"nimble_inits",
+		"get_model_flags",
 		"write_abundance",
 		"write_out_p",
 		"subset_N_unobserved",

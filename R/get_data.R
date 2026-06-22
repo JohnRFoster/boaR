@@ -6,9 +6,9 @@
 #'
 #' @export
 
-get_data <- function(file, interval, create_new) {
+get_data <- function(file, interval, create_new, start_date = "2014-01-01") {
 	all_take <- readr::read_csv(file, show_col_types = FALSE) |>
-		dplyr::filter(start.date >= lubridate::ymd("2014-01-01")) |>
+		dplyr::filter(start.date >= lubridate::ymd(start_date)) |>
 		dplyr::mutate(
 			cnty_name = dplyr::if_else(
 				grepl("ST ", cnty_name),

@@ -65,7 +65,7 @@ nimble_constants <- function(
     m_p = ncol(X),
     start = start_end$start,
     end = start_end$end,
-    method = m_vec,
+    method = as.numeric(as.factor(m_vec)),
     shooting = ifelse(m_vec %in% 1:3, 1, 0),
     ts_id = ts_id,
     pp_len = interval,

@@ -27,8 +27,9 @@ single_mcmc_chain <- function(
   use_traps_and_snares <- model_flags$use_traps_and_snares
   use_traps_or_snares <- model_flags$use_traps_or_snares
 
+  model_code <- nimble_removal_model()
   Rmodel <- nimble::nimbleModel(
-    code = nimble_removal_model(),
+    code = model_code,
     constants = model_constants,
     data = model_data,
     inits = init,

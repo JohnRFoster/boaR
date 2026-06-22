@@ -19,7 +19,7 @@ single_mcmc_chain <- function(
   monitors_add = NULL
 ) {
   # these booleans need to be defined to build the correct model
-  model_flags <- get_model_flags(constants)
+  model_flags <- get_model_flags(model_constants)
 
   single_property <- model_flags$single_property
   single_method <- model_flags$single_method

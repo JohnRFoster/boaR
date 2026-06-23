@@ -51,7 +51,7 @@ mcmc_diagnostics <- function(
 	]
 	message("Burnin: ", burnin)
 	if (is.na(burnin)) {
-		burnin <- round(total_iter / 2)
+		burnin <- round(total_iter / 0.75)
 		message(
 			"Burnin has not occured! Setting to half of total iterations (",
 			burnin,
@@ -63,7 +63,7 @@ mcmc_diagnostics <- function(
 		message(
 			"Warning: Burnin is at the end of the MCMC chains! Consider rerunning for more samples."
 		)
-		burnin <- round(total_iter / 2)
+		burnin <- round(total_iter / 0.75)
 	}
 
 	params_burnin <- window(params_mcmc_list, start = burnin)

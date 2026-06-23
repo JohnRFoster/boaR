@@ -970,8 +970,7 @@ density_stats <- function(state_df, data) {
 		group_by(
 			node,
 			n_id,
-			agrp_prp_id,
-			property,
+			propertyID,
 			primary_period,
 			property_area_km2
 		) |>

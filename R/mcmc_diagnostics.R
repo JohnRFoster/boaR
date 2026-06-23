@@ -58,6 +58,14 @@ mcmc_diagnostics <- function(
 			")"
 		)
 	}
+
+	if (burnin >= total_iter * 0.9) {
+		message(
+			"Warning: Burnin is at the end of the MCMC chains! Consider rerunning for more samples."
+		)
+		burnin <- round(total_iter / 2)
+	}
+
 	params_burnin <- window(params_mcmc_list, start = burnin)
 
 	# calculate psrf (convergence stat) and effective sample size

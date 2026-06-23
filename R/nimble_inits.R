@@ -126,6 +126,7 @@ nimble_inits <- function(
 			psi_phi = psi_phi,
 			a_phi = a,
 			b_phi = b,
+			lambda = lambda + buffer,
 			N = N + buffer,
 			log_nu = log_nu,
 			log_gamma = log_gamma,

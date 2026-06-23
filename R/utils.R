@@ -961,7 +961,7 @@ density_stats <- function(state_df, data) {
 		select(-timestep)
 
 	property_info <- data |>
-		select(agrp_prp_id, property, primary_period, property_area_km2) |>
+		select(propertyID, property, primary_period, property_area_km2) |>
 		left_join(all_pp) |>
 		distinct()
 

@@ -126,12 +126,12 @@ nimble_inits <- function(
 			psi_phi = psi_phi,
 			a_phi = a,
 			b_phi = b,
-			lambda = lambda + buffer,
+			lambda = lambda[1:(n_time_prop - 1)] + buffer,
 			N = N + buffer,
 			log_nu = log_nu,
 			log_gamma = log_gamma,
 			log_rho = log_rho,
-			phi = phi,
+			phi = phi[1:(n_time_prop - 1)],
 			zeta = zeta,
 			log_zeta = log(zeta)
 		)

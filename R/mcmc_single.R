@@ -25,6 +25,8 @@ single_mcmc_chain <- function(
   use_shooting <- model_flags$use_shooting
   use_traps_and_snares <- model_flags$use_traps_and_snares
   use_traps_or_snares <- model_flags$use_traps_or_snares
+  no_landcover <- model_flags$no_landcover
+  use_beta_p <- model_flags$use_beta_p
 
   Rmodel <- nimble::nimbleModel(
     code = nimble_removal_model(),

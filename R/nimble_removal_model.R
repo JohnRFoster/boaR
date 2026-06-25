@@ -27,8 +27,10 @@ nimble_removal_model <- function() {
       # observation model is used for every method
       beta1 ~ dnorm(beta1_mu, tau = beta1_tau)
 
-      for (i in 1:n_betaP) {
-        beta_p[1, i] ~ dnorm(beta_p_mu[i], tau = beta_p_tau[i])
+      if (use_beta_p) {
+        for (i in 1:n_betaP) {
+          beta_p[1, i] ~ dnorm(beta_p_mu[i], tau = beta_p_tau[i])
+        }
       }
     } else {
       # multiple methods used in the data, scenarios are:
@@ -76,11 +78,13 @@ nimble_removal_model <- function() {
       # row 4 = SNARE, [c_road_den, c_rugged, c_canopy]
       # row 5 = TRAPS, [c_road_den, c_rugged, c_canopy]
       # this loop builds by row
-      for (i in 1:n_betaP) {
-        beta_p[beta_p_row[i], beta_p_col[i]] ~ dnorm(
-          beta_p_mu[i],
-          tau = beta_p_tau[i]
-        )
+      if (use_beta_p) {
+        for (i in 1:n_betaP) {
+          beta_p[beta_p_row[i], beta_p_col[i]] ~ dnorm(
+            beta_p_mu[i],
+            tau = beta_p_tau[i]
+          )
+        }
       }
     }
 
@@ -167,21 +171,33 @@ nimble_removal_model <- function() {
         }
       }
       # probability of capture, given that an individual is in the surveyed area
-      if (single_method) {
-        log_theta[i] <- log(
-          ilogit(
-            beta1 + inprod(X_p[i, 1:m_p], beta_p[1, 1:m_p])
-          )
-        ) +
-          min(0, log_potential_area[i] - log_survey_area_km2[i])
+
+      if (no_landcover) {
+        if (single_method) {
+          log_theta[i] <- log(ilogit(beta1)) +
+            min(0, log_potential_area[i] - log_survey_area_km2[i])
+        } else {
+          log_theta[i] <- log(ilogit(beta1[method[i]])) +
+            min(0, log_potential_area[i] - log_survey_area_km2[i])
+        }
       } else {
-        log_theta[i] <- log(
-          ilogit(
-            beta1[method[i]] + inprod(X_p[i, 1:m_p], beta_p[method[i], 1:m_p])
-          )
-        ) +
-          min(0, log_potential_area[i] - log_survey_area_km2[i])
+        if (single_method) {
+          log_theta[i] <- log(
+            ilogit(
+              beta1 + inprod(X_p[i, 1:m_p], beta_p[1, 1:m_p])
+            )
+          ) +
+            min(0, log_potential_area[i] - log_survey_area_km2[i])
+        } else {
+          log_theta[i] <- log(
+            ilogit(
+              beta1[method[i]] + inprod(X_p[i, 1:m_p], beta_p[method[i], 1:m_p])
+            )
+          ) +
+            min(0, log_potential_area[i] - log_survey_area_km2[i])
+        }
       }
+
 
       # likelihood
       y[i] ~ dpois(p[i] * (N[nH_p[i]] - y_sum[i]))

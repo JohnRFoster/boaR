@@ -1,5 +1,5 @@
 #' Read MIS data, filter, and create primary periods
-#' @param file The file path to the raw data CSV.
+#' @param file Processed MIS CSV.
 #' @param interval The number of days in each primary period.
 #' @param create_new Whether to create new primary periods or use existing ones (from calibration).
 #' @param start_date Custom start date cutoff, default is 2014-01-01
@@ -7,7 +7,7 @@
 #' @export
 
 get_data <- function(file, interval, create_new, start_date = "2014-01-01") {
-	all_take <- readr::read_csv(file, show_col_types = FALSE) |>
+	all_take <- file |>
 		dplyr::filter(start.date >= lubridate::ymd(start_date)) |>
 		dplyr::mutate(
 			cnty_name = dplyr::if_else(

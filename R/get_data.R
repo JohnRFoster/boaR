@@ -90,8 +90,8 @@ get_obs_covars <- function(df) {
 		) |>
 		dplyr::ungroup() |>
 		dplyr::mutate(
-			c_road_den = center_scale(rural.road.density),
-			c_rugged = center_scale(mean.ruggedness),
-			c_canopy = center_scale(mean.canopy.density)
+			c_road_den = (rural.road.density - rrd_mu) / rrd_sd,
+			c_rugged = (mean.ruggedness - ruggedness_mu) / ruggedness_sd,
+			c_canopy = (mean.canopy.density - canopy_density_mu) / canopy_density_sd
 		)
 }

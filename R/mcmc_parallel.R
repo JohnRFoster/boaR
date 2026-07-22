@@ -178,4 +178,5 @@ mcmc_parallel <- function(n_chains,
   }
 
   dplyr::if_else(diagnostic$done, TRUE, FALSE)
+  parallel::stopCluster(cl)
 }

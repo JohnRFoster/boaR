@@ -960,7 +960,7 @@ density_stats <- function(state_df, data) {
     select(-timestep)
 
   property_info <- data |>
-    select(propertyID, property, primary_period, property_area_km2) |>
+    select(propertyID, property, primary_period, property_area_km2, start_dates, end_dates) |>
     left_join(all_pp) |>
     distinct()
 
@@ -971,20 +971,16 @@ density_stats <- function(state_df, data) {
       n_id,
       propertyID,
       primary_period,
-      property_area_km2
+      property_area_km2,
+      start_dates,
+      end_dates
     ) |>
     summarise(
       mean = mean(density),
       variance = var(density),
-      `0.025` = quantile(density, 0.025),
       `0.05` = quantile(density, 0.05),
-      `0.1` = quantile(density, 0.1),
-      `0.25` = quantile(density, 0.25),
       `0.5` = quantile(density, 0.5),
-      `0.75` = quantile(density, 0.75),
-      `0.9` = quantile(density, 0.9),
-      `0.95` = quantile(density, 0.95),
-      `0.975` = quantile(density, 0.975)
+      `0.95` = quantile(density, 0.95)
     ) |>
     ungroup()
 }

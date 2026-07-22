@@ -46,9 +46,8 @@ mcmc_diagnostics <- function(
 	)
 
 	GBR <- coda::gelman.plot(params_mcmc_list)
-	burnin <- GBR$last.iter[
-		tail(which(apply(GBR$shrink[,, 2] > 1.1, 1, any)), 1) + 1
-	]
+	burnin <- GBR$last.iter[tail(which(apply(GBR$shrink[,, 2] > 1.1, 1, any)), 1) + 1]
+
 	message("Burnin: ", burnin)
 	if (is.na(burnin)) {
 		burnin <- round(total_iter * 0.75)

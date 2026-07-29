@@ -28,17 +28,20 @@ nimble_constants <- function(
 
   # need the correct index for gamma and p when traps and/or snares are used
   if (4 %in% m_vec && 5 %in% m_vec) {
-    # if all methods are used then subtract 3
+    # if snares and traps are used then subtract 3
     # because their defaults are snares = 4 and traps = 5
-    ts_id <- m_vec - 3
+    # set others to 0 because they won't be used in the model code
+    ts_id <- pmax(0, m_vec - 3)
   } else if (4 %in% m_vec || 5 %in% m_vec) {
     # if only one of the two is used then set the index to 1
+    # set the rest to 0 because they won't be used in the model code
     ts_id <- m_vec
     ts_id[ts_id == 4 | ts_id == 5] <- 1
+    ts_id[ts_id != 1] <- 0
   } else if (!4 %in% m_vec && !5 %in% m_vec) {
     # if neither traps nor snares are used then we won't use gamma or p
-    # so the index doesn't matter (ts_id will be ignored in the model code)
-    ts_id <- m_vec
+    # so the index doesn't matter (ts_id will be ignored in the model code, set to 0)
+    ts_id <- rep(0, length(m_vec))
   } else {
     stop("Invalid combination of methods")
   }

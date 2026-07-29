@@ -14,17 +14,19 @@
 #'
 #' @export
 
-mcmc_parallel <- function(n_chains,
-                          model_constants,
-                          model_data,
-                          model_flags,
-                          params_check,
-                          n_iters,
-                          dest,
-                          monitors_add = NULL,
-                          custom_samplers = NULL,
-                          export = NULL,
-                          ...) {
+mcmc_parallel <- function(
+  n_chains,
+  model_constants,
+  model_data,
+  model_flags,
+  params_check,
+  n_iters,
+  dest,
+  monitors_add = NULL,
+  custom_samplers = NULL,
+  export = NULL,
+  ...
+) {
   export_default <- c(
     "model_data",
     "model_constants",
@@ -62,7 +64,6 @@ mcmc_parallel <- function(n_chains,
     init <- nimble_inits(
       constants_nimble = model_constants,
       data_nimble = model_data,
-      buffer = 200,
       ...
     )
     parallel::clusterExport(cl[i], "init", envir = environment())

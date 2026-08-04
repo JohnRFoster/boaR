@@ -13,17 +13,19 @@
 #' @return A list of initial values for the nimble model. Works for one chain.
 #' @export
 
-nimble_inits <- function(constants_nimble,
-                         data_nimble,
-                         buffer = 1000,
-                         beta1 = NULL,
-                         beta_p = NULL,
-                         p_mu = NULL,
-                         log_gamma = NULL,
-                         log_rho = NULL,
-                         psi_phi = NULL,
-                         phi_mu = NULL,
-                         log_nu = NULL) {
+nimble_inits <- function(
+  constants_nimble,
+  data_nimble,
+  buffer = 1000,
+  beta1 = NULL,
+  beta_p = NULL,
+  p_mu = NULL,
+  log_gamma = NULL,
+  log_rho = NULL,
+  psi_phi = NULL,
+  phi_mu = NULL,
+  log_nu = NULL
+) {
   with(append(constants_nimble, data_nimble), {
     if (is.null(beta1)) {
       beta1 <- rnorm(n_method, beta1_mu, sqrt(1 / beta1_tau))
@@ -96,6 +98,12 @@ nimble_inits <- function(constants_nimble,
 
     N <- phi <- lambda <- rep(0, max(nH, na.rm = TRUE))
     n_init <- rep(NA, n_property)
+
+    if (n_property == 1) {
+      rem <- matrix(rem, nrow = 1, ncol = length(rem))
+      nH <- matrix(nH, nrow = 1, ncol = length(nH))
+    }
+
     for (i in 1:n_property) {
       n_init[i] <- round(runif(1, n1_max[i] * 0.25, n1_max[i] * 0.75)) +
         sum(rem[i, ], na.rm = TRUE)

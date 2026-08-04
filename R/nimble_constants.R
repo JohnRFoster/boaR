@@ -42,8 +42,8 @@ nimble_constants <- function(
     # if only one of the two is used then set the index to 1
     # set the rest to 0 because they won't be used in the model code
     ts_id <- m_vec
+    ts_id[ts_id %in% 1:3] <- 0
     ts_id[ts_id == 4 | ts_id == 5] <- 1
-    ts_id[ts_id != 1] <- 0
   } else if (!4 %in% m_vec && !5 %in% m_vec) {
     # if neither traps nor snares are used then we won't use gamma or p
     # so the index doesn't matter (ts_id will be ignored in the model code, set to 0)

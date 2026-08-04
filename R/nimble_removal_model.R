@@ -117,11 +117,8 @@ nimble_removal_model <- function() {
             log(1 + (p_unique * n_trap_m1[i]))
         }
       } else {
-        # multiple methods used in the data, scenarios are:
-        # shooting method(s) with traps or snares
-        # shooting method(s) with traps and snares
-        # shooting only
-        # traps and snares only
+        # multiple methods used in the data,
+        # need to know if traps or snares are used, or both, or neither
 
         if (use_traps_or_snares) {
           # either traps or snares so 1 gamma and 1 p
@@ -130,35 +127,14 @@ nimble_removal_model <- function() {
             log_gamma_vec[j] <- log_gamma
             p_unique_vec[j] <- p_unique
           }
-
-          log_potential_area[i] <- calc_log_potential_area(
-            log_rho = log_rho[1:n_method],
-            log_gamma = log_gamma_vec,
-            p_unique = p_unique_vec,
-            log_effort_per = log_effort_per[i],
-            effort_per = effort_per[i],
-            n_trap_m1 = n_trap_m1[i],
-            log_pi = log_pi,
-            shooting = shooting[i],
-            method = method[i],
-            ts_id = ts_id[i]
-          )
         }
 
         if (use_traps_and_snares) {
           # both traps and snares so 2 gamma and 2 p
-          log_potential_area[i] <- calc_log_potential_area(
-            log_rho = log_rho[1:n_method],
-            log_gamma = log_gamma[1:2],
-            p_unique = p_unique[1:2],
-            log_effort_per = log_effort_per[i],
-            effort_per = effort_per[i],
-            n_trap_m1 = n_trap_m1[i],
-            log_pi = log_pi,
-            shooting = shooting[i],
-            method = method[i],
-            ts_id = ts_id[i]
-          )
+          for (j in 1:2) {
+            log_gamma_vec[j] <- log_gamma[j]
+            p_unique_vec[j] <- p_unique[j]
+          }
         }
 
         if (!use_traps_or_snares & !use_traps_and_snares) {
@@ -168,19 +144,20 @@ nimble_removal_model <- function() {
             log_gamma_vec[j] <- 0
             p_unique_vec[j] <- 0
           }
-          log_potential_area[i] <- calc_log_potential_area(
-            log_rho = log_rho[1:n_method],
-            log_gamma = log_gamma_vec,
-            p_unique = p_unique_vec,
-            log_effort_per = log_effort_per[i],
-            effort_per = effort_per[i],
-            n_trap_m1 = n_trap_m1[i],
-            log_pi = log_pi,
-            shooting = shooting[i],
-            method = method[i],
-            ts_id = ts_id[i]
-          )
         }
+
+        log_potential_area[i] <- calc_log_potential_area(
+          log_rho = log_rho[1:n_method],
+          log_gamma = log_gamma_vec[1:2],
+          p_unique = p_unique_vec[1:2],
+          log_effort_per = log_effort_per[i],
+          effort_per = effort_per[i],
+          n_trap_m1 = n_trap_m1[i],
+          log_pi = log_pi,
+          shooting = shooting[i],
+          method = method[i],
+          ts_id = ts_id[i]
+        )
       }
       # probability of capture, given that an individual is in the surveyed area
 

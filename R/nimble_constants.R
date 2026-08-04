@@ -25,6 +25,12 @@ nimble_constants <- function(
   start_end <- create_start_end(df, all_primary_periods)
   n1_priors <- get_n1_prior(df)
   m_vec <- method_factors(df)
+  n_property <- length(unique(df$property))
+
+  if (n_property == 1) {
+    nH <- as.numeric(nH)
+    rem <- as.numeric(rem)
+  }
 
   # need the correct index for gamma and p when traps and/or snares are used
   if (4 %in% m_vec && 5 %in% m_vec) {
@@ -49,7 +55,7 @@ nimble_constants <- function(
   constants <- list(
     n_survey = nrow(df),
     n_ls = length(data_ls), # mean litter size year from VerCauteren et al. 2019 pg 63
-    n_property = length(unique(df$property)),
+    n_property = n_property,
     n_first_survey = length(which(df$order == 1)),
     n_not_first_survey = length(which(df$order != 1)),
     n_method = n_method,

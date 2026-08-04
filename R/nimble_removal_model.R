@@ -198,7 +198,6 @@ nimble_removal_model <- function() {
         }
       }
 
-
       # likelihood
       y[i] ~ dpois(p[i] * (N[nH_p[i]] - y_sum[i]))
     }
@@ -219,19 +218,18 @@ nimble_removal_model <- function() {
 
     if (single_property) {
       lambda_1 ~ dunif(n1_min, n1_max)
-      N[nH[1, 1]] ~ dpois(round(lambda_1))
+      N[1] ~ dpois(round(lambda_1))
 
       # population growth across time steps
       for (j in 2:n_time_prop) {
         # loop through every PP, including missing ones
-
-        lambda[nH[1, j - 1]] <- (N[nH[1, j - 1]] - rem[1, j - 1]) *
+        lambda[j - 1] <- (N[j - 1] - rem[j - 1]) *
           zeta /
           2 +
-          (N[nH[1, j - 1]] - rem[1, j - 1]) * phi[nH[1, j - 1]]
+          (N[j - 1] - rem[j - 1]) * phi[j - 1]
 
-        N[nH[1, j]] ~ dpois(lambda[nH[1, j - 1]])
-        phi[nH[1, j - 1]] ~ dbeta(a_phi, b_phi)
+        N[j] ~ dpois(lambda[j - 1])
+        phi[j - 1] ~ dbeta(a_phi, b_phi)
       }
     } else {
       for (i in 1:n_property) {

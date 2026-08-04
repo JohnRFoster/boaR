@@ -123,10 +123,10 @@ nimble_removal_model <- function() {
         if (use_traps_or_snares) {
           # either traps or snares so 1 gamma and 1 p
           # but need them to be vectors for calc_log_potential_area
-          for (j in 1:2) {
-            log_gamma_vec[j] <- log_gamma
-            p_unique_vec[j] <- p_unique
-          }
+          log_gamma_vec[1] <- log_gamma
+          log_gamma_vec[2] <- 0
+          p_unique_vec[1] <- p_unique
+          p_unique_vec[2] <- 0
         }
 
         if (use_traps_and_snares) {

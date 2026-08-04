@@ -123,6 +123,11 @@ nimble_inits <- function(
       }
     }
 
+    if (n_property == 1) {
+      phi <- phi[-length(phi)]
+      lambda <- lambda[-length(lambda)]
+    }
+    s
     list(
       lambda_1 = pmin(n_init + buffer, n1_max),
       beta_p = beta_p,

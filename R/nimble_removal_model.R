@@ -125,10 +125,16 @@ nimble_removal_model <- function() {
 
         if (use_traps_or_snares) {
           # either traps or snares so 1 gamma and 1 p
+          # but need them to be vectors for calc_log_potential_area
+          for (i in 1:2) {
+            log_gamma_vec[i] <- log_gamma
+            p_unique_vec[i] <- p_unique
+          }
+
           log_potential_area[i] <- calc_log_potential_area(
             log_rho = log_rho[1:n_method],
-            log_gamma = log_gamma,
-            p_unique = p_unique,
+            log_gamma = log_gamma_vec,
+            p_unique = p_unique_vec,
             log_effort_per = log_effort_per[i],
             effort_per = effort_per[i],
             n_trap_m1 = n_trap_m1[i],
@@ -138,6 +144,7 @@ nimble_removal_model <- function() {
             ts_id = ts_id[i]
           )
         }
+
         if (use_traps_and_snares) {
           # both traps and snares so 2 gamma and 2 p
           log_potential_area[i] <- calc_log_potential_area(
@@ -156,10 +163,15 @@ nimble_removal_model <- function() {
 
         if (!use_traps_or_snares & !use_traps_and_snares) {
           # no gamma no p
+          # but need them to be vectors for calc_log_potential_area
+          for (i in 1:2) {
+            log_gamma_vec[i] <- 0
+            p_unique_vec[i] <- 0
+          }
           log_potential_area[i] <- calc_log_potential_area(
             log_rho = log_rho[1:n_method],
-            log_gamma = 0,
-            p_unique = 0,
+            log_gamma = log_gamma_vec,
+            p_unique = p_unique_vec,
             log_effort_per = log_effort_per[i],
             effort_per = effort_per[i],
             n_trap_m1 = n_trap_m1[i],

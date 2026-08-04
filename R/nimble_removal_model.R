@@ -88,6 +88,34 @@ nimble_removal_model <- function() {
       }
     }
 
+    # For feeding into calc_log_potential_area
+    # need to know if traps or snares are used, or both, or neither
+    if (use_traps_or_snares) {
+      # either traps or snares so 1 gamma and 1 p
+      # but need them to be vectors for calc_log_potential_area
+      log_gamma_vec[1] <- log_gamma
+      log_gamma_vec[2] <- 0
+      p_unique_vec[1] <- p_unique
+      p_unique_vec[2] <- 0
+    }
+
+    if (use_traps_and_snares) {
+      # both traps and snares so 2 gamma and 2 p
+      for (j in 1:2) {
+        log_gamma_vec[j] <- log_gamma[j]
+        p_unique_vec[j] <- p_unique[j]
+      }
+    }
+
+    if (!use_traps_or_snares & !use_traps_and_snares) {
+      # no gamma no p
+      # but need them to be vectors for calc_log_potential_area
+      for (j in 1:2) {
+        log_gamma_vec[j] <- 0
+        p_unique_vec[j] <- 0
+      }
+    }
+
     # estimate apparent survival
     phi_mu ~ dbeta(phi_mu_a, phi_mu_b)
     psi_phi ~ dgamma(psi_shape, psi_rate)
@@ -117,35 +145,6 @@ nimble_removal_model <- function() {
             log(1 + (p_unique * n_trap_m1[i]))
         }
       } else {
-        # multiple methods used in the data,
-        # need to know if traps or snares are used, or both, or neither
-
-        if (use_traps_or_snares) {
-          # either traps or snares so 1 gamma and 1 p
-          # but need them to be vectors for calc_log_potential_area
-          log_gamma_vec[1] <- log_gamma
-          log_gamma_vec[2] <- 0
-          p_unique_vec[1] <- p_unique
-          p_unique_vec[2] <- 0
-        }
-
-        if (use_traps_and_snares) {
-          # both traps and snares so 2 gamma and 2 p
-          for (j in 1:2) {
-            log_gamma_vec[j] <- log_gamma[j]
-            p_unique_vec[j] <- p_unique[j]
-          }
-        }
-
-        if (!use_traps_or_snares & !use_traps_and_snares) {
-          # no gamma no p
-          # but need them to be vectors for calc_log_potential_area
-          for (j in 1:2) {
-            log_gamma_vec[j] <- 0
-            p_unique_vec[j] <- 0
-          }
-        }
-
         log_potential_area[i] <- calc_log_potential_area(
           log_rho = log_rho[1:n_method],
           log_gamma = log_gamma_vec[1:2],
@@ -160,7 +159,6 @@ nimble_removal_model <- function() {
         )
       }
       # probability of capture, given that an individual is in the surveyed area
-
       if (no_landcover) {
         if (single_method) {
           log_theta[i] <- log(ilogit(beta1)) +

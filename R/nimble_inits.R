@@ -30,7 +30,7 @@ nimble_inits <- function(
     if (is.null(beta1)) {
       beta1 <- rnorm(n_method, beta1_mu, sqrt(1 / beta1_tau))
     } else {
-      beta1 <- runif(length(beta1), beta1$min, beta1$max)
+      beta1 <- runif(nrow(beta1), beta1$min, beta1$max)
     }
 
     if (is.null(beta_p)) {
@@ -42,7 +42,7 @@ nimble_inits <- function(
       )
     } else {
       beta_p <- matrix(
-        runif(length(beta_p), beta_p$min, beta_p$max),
+        runif(nrow(beta_p), beta_p$min, beta_p$max),
         n_method,
         m_p,
         byrow = TRUE
@@ -52,7 +52,7 @@ nimble_inits <- function(
     if (is.null(p_mu)) {
       p_mu <- rnorm(length(p_mu_mu), p_mu_mu, sqrt(1 / p_mu_tau))
     } else {
-      p_mu <- runif(length(p_mu), p_mu$min, p_mu$max)
+      p_mu <- runif(nrow(p_mu), p_mu$min, p_mu$max)
     }
 
     if (is.null(log_gamma)) {
@@ -62,13 +62,13 @@ nimble_inits <- function(
         sqrt(1 / log_gamma_tau)
       )
     } else {
-      log_gamma <- runif(length(log_gamma), log_gamma$min, log_gamma$max)
+      log_gamma <- runif(nrow(log_gamma), log_gamma$min, log_gamma$max)
     }
 
     if (is.null(log_rho)) {
       log_rho <- rnorm(n_method, log_rho_mu, sqrt(1 / log_rho_tau))
     } else {
-      log_rho <- runif(n_method, log_rho$min, log_rho$max)
+      log_rho <- runif(nrow(log_rho), log_rho$min, log_rho$max)
     }
 
     if (is.null(psi_phi)) {

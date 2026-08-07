@@ -41,6 +41,7 @@ mcmc_parallel <- function(
     "nimble_removal_model",
     "write_abundance",
     "write_out_p",
+    "print_first_mcmc_iteration",
     "subset_N_unobserved",
     "subset_N_observed",
     "subset_params",
@@ -60,13 +61,14 @@ mcmc_parallel <- function(
 
   for (i in seq_along(cl)) {
     set.seed(i)
+    chain_id <- i
 
     init <- nimble_inits(
       constants_nimble = model_constants,
       data_nimble = model_data,
       ...
     )
-    parallel::clusterExport(cl[i], "init", envir = environment())
+    parallel::clusterExport(cl[i], c("init", "chain_id"), envir = environment())
   }
 
   # initialize model and first samples
@@ -80,6 +82,8 @@ mcmc_parallel <- function(
       model_flags = model_flags,
       init = init,
       n_iter = n_iters,
+      chain_id = chain_id,
+      params_check = params_check,
       custom_samplers = NULL,
       monitors_add = monitors_add
     )

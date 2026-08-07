@@ -84,6 +84,7 @@ mcmc_parallel <- function(
       monitors_add = monitors_add
     )
   )
+  print_first_mcmc_iteration(out, params_check)
   message("Model compile and initial 1000 iterations completed in:")
   print(round(Sys.time() - start, 2))
 

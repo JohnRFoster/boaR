@@ -30,6 +30,29 @@ subset_params <- function() {
     as.matrix()
 }
 
+print_first_mcmc_iteration <- function(chains, params_check) {
+  message("\n==== First MCMC iteration by chain ====")
+  for (i in seq_along(chains)) {
+    message("Chain ", i)
+    chain_samples <- as.matrix(chains[[i]])
+
+    for (node in params_check) {
+      node_samples <- chain_samples[, grep(node, colnames(chain_samples), value = TRUE, fixed = TRUE), drop = FALSE]
+
+      if (ncol(node_samples) == 0) {
+        message("  ", node, ": <not found>")
+        next
+      }
+
+      values <- paste(
+        paste0(colnames(node_samples), "=", signif(node_samples[1, ], 6)),
+        collapse = ", "
+      )
+      message("  ", node, ": ", values)
+    }
+  }
+}
+
 # get observed abundance nodes using subset_mcmc
 subset_N_observed <- function() {
   nodes <- paste0("N[", model_constants$N_full_unique, "]")

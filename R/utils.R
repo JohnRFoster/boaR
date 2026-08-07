@@ -30,10 +30,10 @@ subset_params <- function() {
     as.matrix()
 }
 
-print_first_mcmc_iteration <- function(chains, params_check) {
+print_first_mcmc_iteration <- function(chains, params_check, chain_ids = seq_along(chains)) {
   message("\n==== First MCMC iteration by chain ====")
   for (i in seq_along(chains)) {
-    message("Chain ", i)
+    message("Chain ", chain_ids[i])
     chain_samples <- as.matrix(chains[[i]])
 
     for (node in params_check) {

@@ -10,6 +10,8 @@ single_mcmc_chain(
   model_flags,
   init,
   n_iter,
+  chain_id = NULL,
+  params_check = NULL,
   custom_samplers = NULL,
   monitors_add = NULL
 )
@@ -22,6 +24,10 @@ single_mcmc_chain(
 \item{init}{A list of initial values for the nimble model.}
 
 \item{n_iter}{The number of MCMC iterations to run.}
+
+\item{chain_id}{Optional chain identifier used in progress output.}
+
+\item{params_check}{Optional vector of monitored parameter nodes to print after the first sampling chunk.}
 
 \item{custom_samplers}{A data frame specifying custom samplers to use. Should have columns "node" and "type".}
 

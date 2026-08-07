@@ -4,6 +4,8 @@
 #' @param model_data A list of data for the nimble model.
 #' @param init A list of initial values for the nimble model.
 #' @param n_iter The number of MCMC iterations to run.
+#' @param chain_id Optional chain identifier used in progress output.
+#' @param params_check Optional vector of monitored parameter nodes to print after the first sampling chunk.
 #' @param custom_samplers A data frame specifying custom samplers to use. Should have columns "node" and "type".
 #' @param monitors_add A character vector of additional nodes to monitor.
 #'
@@ -16,6 +18,8 @@ single_mcmc_chain <- function(
   model_flags,
   init,
   n_iter,
+  chain_id = NULL,
+  params_check = NULL,
   custom_samplers = NULL,
   monitors_add = NULL
 ) {
@@ -100,5 +104,8 @@ single_mcmc_chain <- function(
 
   Cmcmc$run(niter = n_iter, nburnin = n_iter / 2, thin = 10)
   samples <- as.matrix(Cmcmc$mvSamples)
+  if (!is.null(params_check)) {
+    print_first_mcmc_iteration(list(samples), params_check, chain_ids = chain_id)
+  }
   return(samples)
 }

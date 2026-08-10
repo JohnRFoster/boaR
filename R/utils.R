@@ -53,6 +53,85 @@ print_first_mcmc_iteration <- function(chains, params_check, chain_ids = seq_alo
   }
 }
 
+find_stuck_mcmc_params <- function(chains, params_check, chain_ids = seq_along(chains)) {
+  stuck <- list()
+  idx <- 1
+
+  for (i in seq_along(chains)) {
+    chain_samples <- as.matrix(chains[[i]])
+
+    for (node in params_check) {
+      matched_nodes <- grep(node, colnames(chain_samples), value = TRUE, fixed = TRUE)
+
+      if (length(matched_nodes) == 0) {
+        next
+      }
+
+      unique_counts <- vapply(
+        matched_nodes,
+        function(node_name) {
+          node_values <- chain_samples[, node_name]
+          length(unique(node_values[!is.na(node_values)]))
+        },
+        integer(1)
+      )
+
+      stuck_nodes <- matched_nodes[unique_counts <= 1]
+
+      if (length(stuck_nodes) > 0) {
+        stuck[[idx]] <- tibble::tibble(
+          chain_id = chain_ids[i],
+          param = node,
+          node = stuck_nodes
+        )
+        idx <- idx + 1
+      }
+    }
+  }
+
+  if (length(stuck) == 0) {
+    return(tibble::tibble(
+      chain_id = numeric(),
+      param = character(),
+      node = character()
+    ))
+  }
+
+  dplyr::bind_rows(stuck)
+}
+
+run_check_mcmc_script <- function(params_mcmc, params_check, stuck_params, mcmc_dir) {
+  script_candidates <- c(
+    system.file("scripts", "check_mcmc.R", package = "boaR"),
+    file.path("inst", "scripts", "check_mcmc.R"),
+    file.path(getwd(), "inst", "scripts", "check_mcmc.R"),
+    file.path(getwd(), "check_mcmc.R")
+  )
+  script_candidates <- script_candidates[nzchar(script_candidates)]
+  script <- script_candidates[file.exists(script_candidates)][1]
+
+  if (is.na(script) || !nzchar(script) || !file.exists(script)) {
+    message("Unable to locate check_mcmc.R; skipping automated MCMC check.")
+    return(invisible(FALSE))
+  }
+
+  message("\n*** Stopping sampling because monitored parameters never updated. ***")
+  print(stuck_params)
+
+  script_env <- list2env(
+    list(
+      params_mcmc = params_mcmc,
+      params_check = params_check,
+      stuck_params = stuck_params,
+      mcmc_dir = mcmc_dir
+    ),
+    parent = environment()
+  )
+
+  sys.source(script, envir = script_env)
+  invisible(TRUE)
+}
+
 # get observed abundance nodes using subset_mcmc
 subset_N_observed <- function() {
   nodes <- paste0("N[", model_constants$N_full_unique, "]")

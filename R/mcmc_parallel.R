@@ -88,6 +88,19 @@ mcmc_parallel <- function(
       monitors_add = monitors_add
     )
   )
+
+  stuck_params <- find_stuck_mcmc_params(out, params_check)
+  if (nrow(stuck_params) > 0) {
+    parallel::stopCluster(cl)
+    run_check_mcmc_script(
+      params_mcmc = coda::as.mcmc.list(lapply(out, coda::as.mcmc)),
+      params_check = params_check,
+      stuck_params = stuck_params,
+      mcmc_dir = dest
+    )
+    return(FALSE)
+  }
+
   message("Model compile and initial 1000 iterations completed in:")
   print(round(Sys.time() - start, 2))
 
@@ -102,6 +115,18 @@ mcmc_parallel <- function(
   # use mcmc on clusters to subset parameters, observed states, and unobserved states
   params <- parallel::clusterEvalQ(cl, subset_params())
   params <- coda::as.mcmc.list(lapply(params, as.mcmc))
+
+  stuck_params <- find_stuck_mcmc_params(params, params_check)
+  if (nrow(stuck_params) > 0) {
+    parallel::stopCluster(cl)
+    run_check_mcmc_script(
+      params_mcmc = params,
+      params_check = params_check,
+      stuck_params = stuck_params,
+      mcmc_dir = dest
+    )
+    return(FALSE)
+  }
 
   N_observed <- parallel::clusterEvalQ(cl, subset_N_observed())
   N_observed <- coda::as.mcmc.list(lapply(N_observed, as.mcmc))
@@ -149,6 +174,18 @@ mcmc_parallel <- function(
     # use mcmc on clusters to subset parameters, observed states, and unobserved states
     params <- parallel::clusterEvalQ(cl, subset_params())
     params <- coda::as.mcmc.list(lapply(params, as.mcmc))
+
+    stuck_params <- find_stuck_mcmc_params(params, params_check)
+    if (nrow(stuck_params) > 0) {
+      parallel::stopCluster(cl)
+      run_check_mcmc_script(
+        params_mcmc = params,
+        params_check = params_check,
+        stuck_params = stuck_params,
+        mcmc_dir = dest
+      )
+      return(FALSE)
+    }
 
     c_dir <- sprintf("%04d", c)
     path <- file.path(dest, c_dir)

@@ -53,7 +53,7 @@ mcmc_parallel <- function(
     export_default <- c(export_default, export)
   }
 
-  cl <- parallel::makeCluster(n_chains)
+  cl <- parallel::makeCluster(n_chains, outfile = "")
   parallel::clusterExport(cl, export_default, envir = environment())
   parallel::clusterEvalQ(cl, {
     library(boaR)

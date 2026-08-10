@@ -102,10 +102,14 @@ single_mcmc_chain <- function(
   # need to define this in the global environment to continue mcmc when running in parallel
   Cmcmc <<- nimble::compileNimble(Rmcmc)
 
-  Cmcmc$run(niter = n_iter, nburnin = n_iter / 2, thin = 10)
+  Cmcmc$run(niter = 1000, nburnin = n_iter / 2, thin = 10)
   samples <- as.matrix(Cmcmc$mvSamples)
   if (!is.null(params_check)) {
-    print_first_mcmc_iteration(list(samples), params_check, chain_ids = chain_id)
+    print_first_mcmc_iteration(
+      list(samples),
+      params_check,
+      chain_ids = chain_id
+    )
   }
   return(samples)
 }

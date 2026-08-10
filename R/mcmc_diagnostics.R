@@ -5,7 +5,7 @@
 #'@description Calculate MCMC diagnostics for a nimble model
 #' @param mcmc_dir directory where MCMC chunks are stored
 #' @param dest directory where diagnostics and posterior samples will be saved
-#' @param data input data frame used for nimble fit
+#' @param data Optional input data frame used for nimble fit
 #' @param params_check vector of parameters (nodes) to assess convergence
 #' @param n_mcmc number random posterior samples to save after burnin
 #' @param effective_size minimum effective sample size for each parameter
@@ -17,7 +17,7 @@
 mcmc_diagnostics <- function(
 	mcmc_dir,
 	dest,
-	data,
+	data = NULL,
 	params_check,
 	n_mcmc = 5000,
 	effective_size = 1000,
@@ -91,17 +91,22 @@ mcmc_diagnostics <- function(
 	)
 
 	states_mcmc_list <- mcmc_list$states
+	state_samples <- NULL
 
-	states_burnin <- window(states_mcmc_list, start = burnin)
+	if (length(states_mcmc_list) > 0) {
+		states_burnin <- window(states_mcmc_list, start = burnin)
 
-	posterior_burnin2 <- states_burnin |>
-		as.matrix()
+		posterior_burnin2 <- states_burnin |>
+			as.matrix()
 
-	state_samples <- posterior_burnin2 |>
-		tibble::as_tibble() |>
-		dplyr::slice(draws)
+		state_samples <- posterior_burnin2 |>
+			tibble::as_tibble() |>
+			dplyr::slice(draws)
 
-	readr::write_rds(state_samples, file.path(dest, "stateSamples.rds"))
+		readr::write_rds(state_samples, file.path(dest, "stateSamples.rds"))
+	} else {
+		message("No state samples found; skipping state sample export.")
+	}
 
 	if (make_traceplot) {
 		message("\n==== Making traceplots ====")
@@ -113,6 +118,10 @@ mcmc_diagnostics <- function(
 		)
 	}
 
-	density <- density_stats(state_samples, data)
-	write_rds(density, file.path(dest, "densitySummaries.rds"))
+	if (!is.null(data) && !is.null(state_samples)) {
+		density <- density_stats(state_samples, data)
+		write_rds(density, file.path(dest, "densitySummaries.rds"))
+	} else {
+		message("Skipping density summaries because required data are unavailable.")
+	}
 }

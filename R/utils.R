@@ -100,35 +100,17 @@ find_stuck_mcmc_params <- function(chains, params_check, chain_ids = seq_along(c
   dplyr::bind_rows(stuck)
 }
 
-run_check_mcmc_script <- function(params_mcmc, params_check, stuck_params, mcmc_dir) {
-  script_candidates <- c(
-    system.file("scripts", "check_mcmc.R", package = "boaR"),
-    file.path("inst", "scripts", "check_mcmc.R"),
-    file.path(getwd(), "inst", "scripts", "check_mcmc.R"),
-    file.path(getwd(), "check_mcmc.R")
-  )
-  script_candidates <- script_candidates[nzchar(script_candidates)]
-  script <- script_candidates[file.exists(script_candidates)][1]
-
-  if (is.na(script) || !nzchar(script) || !file.exists(script)) {
-    message("Unable to locate check_mcmc.R; skipping automated MCMC check.")
-    return(invisible(FALSE))
-  }
-
+run_stuck_mcmc_diagnostics <- function(mcmc_dir, params_check, stuck_params, diagnostic_data = NULL) {
   message("\n*** Stopping sampling because monitored parameters never updated. ***")
   print(stuck_params)
 
-  script_env <- list2env(
-    list(
-      params_mcmc = params_mcmc,
-      params_check = params_check,
-      stuck_params = stuck_params,
-      mcmc_dir = mcmc_dir
-    ),
-    parent = environment()
+  mcmc_diagnostics(
+    mcmc_dir = mcmc_dir,
+    dest = mcmc_dir,
+    data = diagnostic_data,
+    params_check = params_check,
+    verbose = TRUE
   )
-
-  sys.source(script, envir = script_env)
   invisible(TRUE)
 }
 

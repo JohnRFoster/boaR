@@ -9,7 +9,7 @@ samples and then calculating diagnostics on the collated samples.}
 mcmc_diagnostics(
   mcmc_dir,
   dest,
-  data,
+  data = NULL,
   params_check,
   n_mcmc = 5000,
   effective_size = 1000,
@@ -23,7 +23,7 @@ mcmc_diagnostics(
 
 \item{dest}{directory where diagnostics and posterior samples will be saved}
 
-\item{data}{input data frame used for nimble fit}
+\item{data}{Optional input data frame used for nimble fit}
 
 \item{params_check}{vector of parameters (nodes) to assess convergence}
 

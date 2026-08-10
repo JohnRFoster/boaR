@@ -91,12 +91,17 @@ mcmc_parallel <- function(
 
   stuck_params <- find_stuck_mcmc_params(out, params_check)
   if (nrow(stuck_params) > 0) {
+    path <- file.path(dest, sprintf("%04d", c))
+    if (!dir.exists(path)) {
+      dir.create(path, showWarnings = FALSE, recursive = TRUE)
+    }
+    write_out_p(coda::as.mcmc.list(lapply(out, coda::as.mcmc)), NULL, path)
     parallel::stopCluster(cl)
-    run_check_mcmc_script(
-      params_mcmc = coda::as.mcmc.list(lapply(out, coda::as.mcmc)),
+    run_stuck_mcmc_diagnostics(
+      mcmc_dir = dest,
       params_check = params_check,
       stuck_params = stuck_params,
-      mcmc_dir = dest
+      diagnostic_data = NULL
     )
     return(FALSE)
   }
@@ -118,12 +123,17 @@ mcmc_parallel <- function(
 
   stuck_params <- find_stuck_mcmc_params(params, params_check)
   if (nrow(stuck_params) > 0) {
+    path <- file.path(dest, sprintf("%04d", c))
+    if (!dir.exists(path)) {
+      dir.create(path, showWarnings = FALSE, recursive = TRUE)
+    }
+    write_out_p(params, NULL, path)
     parallel::stopCluster(cl)
-    run_check_mcmc_script(
-      params_mcmc = params,
+    run_stuck_mcmc_diagnostics(
+      mcmc_dir = dest,
       params_check = params_check,
       stuck_params = stuck_params,
-      mcmc_dir = dest
+      diagnostic_data = NULL
     )
     return(FALSE)
   }
@@ -177,12 +187,17 @@ mcmc_parallel <- function(
 
     stuck_params <- find_stuck_mcmc_params(params, params_check)
     if (nrow(stuck_params) > 0) {
+      path <- file.path(dest, sprintf("%04d", c))
+      if (!dir.exists(path)) {
+        dir.create(path, showWarnings = FALSE, recursive = TRUE)
+      }
+      write_out_p(params, NULL, path)
       parallel::stopCluster(cl)
-      run_check_mcmc_script(
-        params_mcmc = params,
+      run_stuck_mcmc_diagnostics(
+        mcmc_dir = dest,
         params_check = params_check,
         stuck_params = stuck_params,
-        mcmc_dir = dest
+        diagnostic_data = NULL
       )
       return(FALSE)
     }

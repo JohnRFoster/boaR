@@ -27,6 +27,22 @@ mcmc_parallel <- function(
   export = NULL,
   ...
 ) {
+  cl <- parallel::makeCluster(n_chains, outfile = "")
+  parallel::clusterEvalQ(cl, {
+    library(boaR)
+    library(nimble)
+  })
+  parallel::clusterSetRNGStream(cl, iseed = 955)
+
+  inits_list <- lapply(seq_len(n_chains), function(i) {
+    set.seed(956 + i)
+    nimble_inits(
+      constants_nimble = model_constants,
+      data_nimble = model_data,
+      ...
+    )
+  })
+
   export_default <- c(
     "model_data",
     "model_constants",
@@ -46,30 +62,15 @@ mcmc_parallel <- function(
     "subset_N_observed",
     "subset_params",
     "subset_mcmc",
-    "continue_sampling"
+    "continue_sampling",
+    "inits_list"
   )
 
   if (!is.null(export)) {
     export_default <- c(export_default, export)
   }
 
-  cl <- parallel::makeCluster(n_chains, outfile = "")
   parallel::clusterExport(cl, export_default, envir = environment())
-  parallel::clusterEvalQ(cl, {
-    library(boaR)
-  })
-
-  for (i in seq_along(cl)) {
-    set.seed(i)
-    chain_id <- i
-
-    init <- nimble_inits(
-      constants_nimble = model_constants,
-      data_nimble = model_data,
-      ...
-    )
-    parallel::clusterExport(cl[i], c("init", "chain_id"), envir = environment())
-  }
 
   # initialize model and first samples
   c <- 1
@@ -80,7 +81,7 @@ mcmc_parallel <- function(
       model_constants = model_constants,
       model_data = model_data,
       model_flags = model_flags,
-      init = init,
+      init = inits_list[[chain_id]],
       n_iter = n_iters,
       chain_id = chain_id,
       params_check = params_check,

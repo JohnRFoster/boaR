@@ -5,7 +5,7 @@
 \title{Function for running nimble in parallel}
 \usage{
 mcmc_parallel(
-  cl,
+  n_chains,
   model_constants,
   model_data,
   model_flags,
@@ -19,7 +19,7 @@ mcmc_parallel(
 )
 }
 \arguments{
-\item{cl}{Cluster made using the parallel package}
+\item{n_chains}{The number of chains to run in parallel. Used to make a socket cluster with n_chains nodes.}
 
 \item{model_constants}{model constants, as a list}
 

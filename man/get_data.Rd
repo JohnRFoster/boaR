@@ -7,7 +7,7 @@
 get_data(file, interval, create_new, start_date = "2014-01-01")
 }
 \arguments{
-\item{file}{The file path to the raw data CSV.}
+\item{file}{Processed MIS CSV.}
 
 \item{interval}{The number of days in each primary period.}
 

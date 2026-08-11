@@ -43,6 +43,8 @@ mcmc_parallel <- function(
     )
   })
 
+  print(str(inits_list))
+
   export_default <- c(
     "model_data",
     "model_constants",
@@ -71,6 +73,11 @@ mcmc_parallel <- function(
   }
 
   parallel::clusterExport(cl, export_default, envir = environment())
+
+  for (i in seq_len(n_chains)) {
+    chain_id <- i
+    parallel::clusterExport(cl[i], "chain_id", envir = environment())
+  }
 
   # initialize model and first samples
   c <- 1

@@ -30,14 +30,21 @@ subset_params <- function() {
     as.matrix()
 }
 
-print_first_mcmc_iteration <- function(chains, params_check, chain_ids = seq_along(chains)) {
+print_first_mcmc_iteration <- function(
+  chains,
+  params_check,
+  chain_ids = seq_along(chains)
+) {
   message("\n==== First MCMC iteration by chain ====")
   for (i in seq_along(chains)) {
     message("Chain ", chain_ids[i])
     chain_samples <- as.matrix(chains[[i]])
 
     for (node in params_check) {
-      node_samples <- chain_samples[, grep(node, colnames(chain_samples), value = TRUE, fixed = TRUE), drop = FALSE]
+      node_samples <- chain_samples[,
+        grep(node, colnames(chain_samples), value = TRUE, fixed = TRUE),
+        drop = FALSE
+      ]
 
       if (ncol(node_samples) == 0) {
         message("  ", node, ": <not found>")
@@ -45,7 +52,7 @@ print_first_mcmc_iteration <- function(chains, params_check, chain_ids = seq_alo
       }
 
       values <- paste(
-        paste0(colnames(node_samples), "=", signif(node_samples[1, ], 6)),
+        paste0(colnames(node_samples), "=", signif(node_samples[1, ], 3)),
         collapse = ", "
       )
       message("  ", node, ": ", values)
@@ -922,11 +929,13 @@ gg_trace_plot <- function(post, nodes_2_plot, thin = 5000) {
 }
 
 # function to create traceplots from thinned posterior
-trace_plot <- function(params_mcmc_list,
-                       nodes_2_plot,
-                       n_chains,
-                       dest,
-                       thin = 5000) {
+trace_plot <- function(
+  params_mcmc_list,
+  nodes_2_plot,
+  n_chains,
+  dest,
+  thin = 5000
+) {
   posterior <- tibble()
   message("Create posterior tibble...")
   pb <- make_pb(min = 1, max = n_chains)
@@ -983,7 +992,14 @@ density_stats <- function(state_df, data) {
     select(-timestep)
 
   property_info <- data |>
-    select(propertyID, property, primary_period, property_area_km2, start_dates, end_dates) |>
+    select(
+      propertyID,
+      property,
+      primary_period,
+      property_area_km2,
+      start_dates,
+      end_dates
+    ) |>
     left_join(all_pp) |>
     distinct()
 

@@ -29,7 +29,7 @@ single_mcmc_chain(
 
 \item{params_check}{Optional vector of monitored parameter nodes to print after the first sampling chunk.}
 
-\item{custom_samplers}{A data frame specifying custom samplers to use. Should have columns "node" and "type".}
+\item{custom_samplers}{A data frame specifying custom samplers to use. Should have columns "node", "type", and "control".}
 
 \item{monitors_add}{A character vector of additional nodes to monitor.}
 }

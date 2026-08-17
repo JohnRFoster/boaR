@@ -6,7 +6,7 @@
 #' @param n_iter The number of MCMC iterations to run.
 #' @param chain_id Optional chain identifier used in progress output.
 #' @param params_check Optional vector of monitored parameter nodes to print after the first sampling chunk.
-#' @param custom_samplers A data frame specifying custom samplers to use. Should have columns "node", "type", and "control".
+#' @param custom_samplers A named list of lists, each containing "node", "type", and "control".
 #' @param monitors_add A character vector of additional nodes to monitor.
 #'
 #' @return A matrix of MCMC samples.
@@ -84,15 +84,18 @@ single_mcmc_chain <- function(
 
   # if specified, change nodes to specified parameters
   if (!is.null(custom_samplers)) {
-    for (i in seq_len(nrow(custom_samplers))) {
-      node <- custom_samplers$node[i]
-      type <- custom_samplers$type[i]
+    for (i in seq_along(custom_samplers)) {
+      ls <- custom_samplers[[i]]
+      node <- ls$node
+      type <- ls$type
+      control <- ls$control
+
       mcmcConf$removeSampler(node)
 
-      if (is.null(custom_samplers$control[[i]])) {
+      if (is.null(control)) {
         mcmcConf$addSampler(node, type)
       } else {
-        mcmcConf$addSampler(node, type, control = custom_samplers$control[[i]])
+        mcmcConf$addSampler(node, type, control = control)
       }
     }
   }

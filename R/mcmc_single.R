@@ -37,7 +37,8 @@ single_mcmc_chain <- function(
     constants = model_constants,
     data = model_data,
     inits = init,
-    calculate = TRUE
+    calculate = TRUE,
+    buildDerivs = TRUE
   )
 
   Rmodel$initializeInfo()

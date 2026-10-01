@@ -504,7 +504,7 @@ create_primary_periods <- function(df, interval, create_new = FALSE) {
       timestep <- NA
     } # otherwise, timestep[i] will be left as NA and filtered out later
   }
-
+  
   message("Creating primary periods from start and end dates...")
   if (interval == 28 && !create_new) {
     timesteps <- purrr::map(
@@ -515,21 +515,21 @@ create_primary_periods <- function(df, interval, create_new = FALSE) {
       unlist() |>
       as.integer()
   } else if (create_new) {
-    end_dates <- unique(sort(df$end.date))
-    min_date <- min(start_dates)
-    max_date <- max(end_dates)
-
+    end_date <- unique(sort(df$end.date))
+    min_date <- min(ymd(start_date))
+    max_date <- max(end_date)
+    
     start_dates <- seq(min_date, max_date, by = paste(interval, "day"))
     end_dates <- c(start_dates[-1] - 1, max_date)
-
+    
     primary_periods <- tibble::tibble(start_dates, end_dates) |>
       mutate(timestep = seq_len(dplyr::n()))
-    primary_periods$month <- month(timestep_df$end_dates)
-    primary_periods$year <- year(timestep_df$end_dates)
+    primary_periods$month <- month(end_dates)
+    primary_periods$year <- year(end_dates)
   } else {
     stop("Interval not supported")
   }
-
+  
   timesteps <- purrr::map(
     seq_len(nrow(df)),
     ~ find_timestep(primary_periods, df$start.date[.x], df$end.date[.x]),
@@ -537,16 +537,16 @@ create_primary_periods <- function(df, interval, create_new = FALSE) {
   ) |>
     unlist() |>
     as.integer()
-
+  
   tmp <- df |>
     dplyr::mutate(timestep = timesteps)
-
+  
   df_time <- dplyr::left_join(tmp, primary_periods)
   df_test <- df_time |> dplyr::filter(!is.na(timestep))
-
+  
   testthat::expect_all_true(df_test$start.date >= df_test$start_dates)
   testthat::expect_all_true(df_test$end.date <= df_test$end_dates)
-
+  
   df_test |>
     dplyr::arrange(propertyID, timestep)
 }

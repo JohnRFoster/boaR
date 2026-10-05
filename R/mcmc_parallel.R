@@ -92,7 +92,7 @@ mcmc_parallel <- function(
       n_iter = n_iters,
       chain_id = chain_id,
       params_check = params_check,
-      custom_samplers = NULL,
+      custom_samplers = custom_samplers,
       monitors_add = monitors_add
     )
   )

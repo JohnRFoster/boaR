@@ -105,8 +105,12 @@ nimble_inits <- function(
         sum(rem[i, ], na.rm = TRUE)
       N[nH[i, 1]] <- n_init[i]
       for (j in 2:n_time_prop[i]) {
-        phi[nH[i, j - 1]] <- rbeta(1, a, b)
-        # phi[nH[i, j - 1]] <- max(0.5, min(rbeta(1, a, b), 0.99))
+        phi_draw <- rbeta(1, a, b)
+        phi[nH[i, j - 1]] <- min(
+          1 - 1e-8,
+          max(1e-8, phi_draw)
+        )
+
         z <- N[nH[i, j - 1]] - rem[i, j - 1]
         z <- max(1, z)
 

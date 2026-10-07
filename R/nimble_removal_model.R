@@ -205,7 +205,7 @@ nimble_removal_model <- function() {
 
     if (single_property) {
       lambda_1 ~ dunif(n1_min, n1_max)
-      N[1] ~ dpois(round(lambda_1))
+      N[1] ~ dpois(lambda_1)
 
       # population growth across time steps
       for (j in 2:n_time_prop) {
@@ -272,7 +272,7 @@ calc_log_potential_area <- nimble::nimbleFunction(
       # traps and snares
       log_potential_area <- log_pi +
         (2 *
-          (log_rho[ts_id] +
+          (log_rho[method] +
             log_effort_per -
             log(exp(log_gamma[ts_id]) + effort_per))) +
         log(1 + (p_unique[ts_id] * n_trap_m1))
